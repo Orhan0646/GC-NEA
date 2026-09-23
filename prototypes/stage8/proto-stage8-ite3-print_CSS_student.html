@@ -1,0 +1,19 @@
+@media print {
+    body { background: white; padding: 0; }
+
+    /* Hide screen-only elements when printing */
+    .screen-only { display: none !important; }
+
+    .report { box-shadow: none; border-radius: 0;
+              padding: 20px; max-width: 100%; }
+
+    /* Force colour printing for progress bars and table headers */
+    .bar-fill { print-color-adjust: exact;
+                -webkit-print-color-adjust: exact; }
+    thead tr  { background: #1a2a6c !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact; }
+}
+
+<!-- Print button calls browser print dialog -->
+<button onclick="window.print()">🖨️ Print / Save PDF</button>

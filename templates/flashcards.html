@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 780px; margin: 0 auto; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; background: rgba(255,255,255,0.95);
+            border-radius: 10px; margin-bottom: 24px;
+        }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .header-right { display: flex; gap: 12px; }
+        .btn-back { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-back:hover { background: #3a7bd5; }
+        .logout-btn { padding: 8px 18px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+        /* ── Picker screen ── */
+        .picker-card {
+            background: white; border-radius: 12px; padding: 40px 36px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12); text-align: center;
+        }
+        .picker-card h2 { font-size: 1.8rem; color: #1a2a6c; margin-bottom: 8px; }
+        .picker-card p  { color: #7f8c8d; margin-bottom: 32px; }
+
+        .picker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; text-align: left; margin-bottom: 28px; }
+        .picker-group label { display: block; font-weight: 700; color: #2c3e50; margin-bottom: 8px; font-size: 0.9rem; }
+        .picker-select {
+            width: 100%; padding: 12px 16px; border: 2px solid #e1e5e9;
+            border-radius: 8px; font-size: 1rem; cursor: pointer;
+            appearance: none; background: #f8f9fa;
+            transition: border-color 0.2s;
+        }
+        .picker-select:focus { border-color: #3a7bd5; outline: none; background: white; }
+
+        .btn-start {
+            padding: 14px 48px; background: #1a2a6c; color: white;
+            border: none; border-radius: 8px; font-size: 1.1rem;
+            font-weight: 700; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-start:hover { background: #3a7bd5; }
+
+        .no-cards-msg {
+            background: #fef9e7; border: 2px solid #f39c12;
+            border-radius: 8px; padding: 16px 20px; margin-top: 20px;
+            color: #b7770d; font-weight: 600;
+        }
+
+        /* ── Progress bar ── */
+        .progress-section { background: white; border-radius: 10px; padding: 16px 24px; margin-bottom: 20px; }
+        .progress-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; color: #555; font-weight: 600; }
+        .progress-track { height: 10px; background: #ecf0f1; border-radius: 5px; overflow: hidden; }
+        .progress-fill  { height: 100%; background: linear-gradient(90deg, #3a7bd5, #2ecc71); border-radius: 5px; transition: width 0.4s ease; }
+
+        /* ── Flashcard ── */
+        .card-scene { width: 100%; height: 320px; perspective: 1000px; margin-bottom: 24px; cursor: pointer; }
+        .card-body {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d; transition: transform 0.55s ease;
+        }
+        .card-body.flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; border-radius: 14px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 36px; box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+        }
+
+        /* Front — question */
+        .card-front { background: white; }
+        .card-front .card-tag { font-size: 0.78rem; font-weight: 700; color: #3a7bd5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 18px; }
+        .card-front .card-question { font-size: 1.25rem; color: #2c3e50; line-height: 1.6; text-align: center; font-weight: 500; }
+        .card-front .flip-hint { margin-top: 24px; font-size: 0.82rem; color: #bdc3c7; }
+
+        /* Back — answer */
+        .card-back { background: #1a2a6c; transform: rotateY(180deg); }
+        .card-back .answer-tag    { font-size: 0.78rem; font-weight: 700; color: #aed6f1; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .card-back .answer-letter { font-size: 2.5rem; font-weight: 900; color: #2ecc71; margin-bottom: 8px; }
+        .card-back .answer-text   { font-size: 1.15rem; color: white; text-align: center; line-height: 1.5; font-weight: 500; }
+        .card-back .answer-hint { margin-top: 14px; font-size: 0.82rem; color: #aed6f1; }
+
+        /* ── Navigation ── */
+        .nav-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .btn-nav {
+            padding: 12px 28px; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-prev { background: #ecf0f1; color: #2c3e50; }
+        .btn-prev:hover:not(:disabled) { background: #d5d8dc; }
+        .btn-next { background: #1a2a6c; color: white; }
+        .btn-next:hover:not(:disabled) { background: #3a7bd5; }
+        .btn-nav:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .card-counter { font-size: 1rem; font-weight: 700; color: white; }
+
+        /* ── Completed screen ── */
+        .completed-card {
+            background: white; border-radius: 12px; padding: 48px 36px;
+            text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+        .completed-card h2 { font-size: 2rem; color: #1a2a6c; margin-bottom: 12px; }
+        .completed-card p  { color: #7f8c8d; margin-bottom: 28px; font-size: 1rem; }
+        .completed-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+        .btn-action { padding: 12px 28px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-block; }
+        .btn-primary   { background: #1a2a6c; color: white; }
+        .btn-primary:hover { background: #3a7bd5; }
+        .btn-secondary { background: #ecf0f1; color: #2c3e50; }
+        .btn-secondary:hover { background: #d5d8dc; }
+
+        @media (max-width: 600px) { .picker-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Flashcard Revision</div>
+        </div>
+        <div class="header-right">
+            <a href="/student-dashboard" class="btn-back">← Dashboard</a>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    {% if cards is none %}
+    <!-- ══ PICKER SCREEN ══ -->
+    <div class="picker-card">
+        <h2>📚 Flashcard Revision</h2>
+        <p>Choose a topic and difficulty to start revising.</p>
+
+        <form method="GET" action="/flashcards">
+            <div class="picker-grid">
+                <div class="picker-group">
+                    <label for="topic">Topic</label>
+                    <select name="topic" id="topic" class="picker-select" required>
+                        <option value="">-- Select Topic --</option>
+                        {% for t in topics %}
+                        <option value="{{ t }}" {% if topic == t %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="picker-group">
+                    <label for="difficulty">Difficulty</label>
+                    <select name="difficulty" id="difficulty" class="picker-select" required>
+                        <option value="">-- Select Difficulty --</option>
+                        {% for d in difficulties %}
+                        <option value="{{ d }}" {% if difficulty == d %}selected{% endif %}>{{ d | title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-start">Start Revision →</button>
+        </form>
+
+        {% if no_cards is defined and no_cards %}
+        <div class="no-cards-msg">
+            ⚠️ No flashcards found for that topic and difficulty. Try a different combination or ask your teacher to add more questions.
+        </div>
+        {% endif %}
+    </div>
+
+    {% else %}
+    <!-- ══ FLASHCARD MODE ══ -->
+
+    <!-- Progress bar -->
+    <div class="progress-section">
+        <div class="progress-label">
+            <span id="progress-text">Card 1 of {{ card_count }}</span>
+            <span style="color:#3a7bd5;font-weight:700;">{{ topic }} — {{ difficulty | title }}</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-bar" style="width: {{ (1 / card_count * 100) | round(1) }}%;"></div>
+        </div>
+    </div>
+
+    <!-- Flashcard -->
+    <div class="card-scene" id="card-scene" onclick="flipCard()">
+        <div class="card-body" id="card-body">
+            <!-- Front -->
+            <div class="card-face card-front">
+                <div class="card-tag">Question</div>
+                <div class="card-question" id="card-question"></div>
+                <div class="flip-hint">🖱 Click anywhere on the card to reveal the answer</div>
+            </div>
+            <!-- Back -->
+            <div class="card-face card-back">
+                <div class="answer-tag">Correct Answer</div>
+                <div class="answer-letter" id="answer-letter"></div>
+                <div class="answer-text"   id="answer-text"></div>
+                <div class="answer-hint">✅ This is the correct answer</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-row">
+        <button class="btn-nav btn-prev" id="btn-prev" onclick="prevCard()" disabled>← Previous</button>
+        <span class="card-counter" id="card-counter">1 / {{ card_count }}</span>
+        <button class="btn-nav btn-next" id="btn-next" onclick="nextCard()">Next →</button>
+    </div>
+    {% endif %}
+
+    <!-- ══ COMPLETED SCREEN (hidden until all cards done) ══ -->
+    <div id="completed-screen" style="display:none; margin-top:24px;">
+        <div class="completed-card">
+            <div style="font-size:3rem;margin-bottom:16px;">🎉</div>
+            <h2>Revision Complete!</h2>
+            <p>You have reviewed all {{ card_count }} flashcards for <strong>{{ topic }}</strong> ({{ difficulty | title if difficulty else '' }}).</p>
+            <div class="completed-actions">
+                <a href="/flashcards?topic={{ topic | urlencode }}&difficulty={{ difficulty }}" class="btn-action btn-primary">🔄 Shuffle Again</a>
+                <a href="/flashcards" class="btn-action btn-secondary">📚 New Topic</a>
+                <a href="/student-dashboard" class="btn-action btn-secondary">← Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% if cards is not none and cards %}
+<script>
+// ── Card data injected by Flask ──────────────────────────────────────
+const CARDS = {{ cards_json | safe }};
+const TOTAL = CARDS.length;
+
+let currentIndex = 0;
+let isFlipped     = false;
+
+// ── DOM refs ─────────────────────────────────────────────────────────
+const cardBody      = document.getElementById("card-body");
+const cardQuestion  = document.getElementById("card-question");
+const answerLetter  = document.getElementById("answer-letter");
+const answerText    = document.getElementById("answer-text");
+const progressBar   = document.getElementById("progress-bar");
+const progressText  = document.getElementById("progress-text");
+const cardCounter   = document.getElementById("card-counter");
+const btnPrev       = document.getElementById("btn-prev");
+const btnNext       = document.getElementById("btn-next");
+
+// ── Render a card ────────────────────────────────────────────────────
+function renderCard(index) {
+    const card = CARDS[index];
+
+    // Reset flip state
+    isFlipped = false;
+    cardBody.classList.remove("flipped");
+
+    // Front
+    cardQuestion.textContent = card.question;
+
+    // Back — correct answer only
+    answerLetter.textContent = card.correct_letter;
+    answerText.textContent   = card.correct_text;
+
+    // Progress
+    const pct = ((index + 1) / TOTAL) * 100;
+    progressBar.style.width  = pct + "%";
+    progressText.textContent = `Card ${index + 1} of ${TOTAL}`;
+    cardCounter.textContent  = `${index + 1} / ${TOTAL}`;
+
+    // Button states
+    btnPrev.disabled = index === 0;
+    btnNext.textContent = index === TOTAL - 1 ? "Finish ✓" : "Next →";
+}
+
+// ── Flip the card ────────────────────────────────────────────────────
+function flipCard() {
+    isFlipped = !isFlipped;
+    cardBody.classList.toggle("flipped", isFlipped);
+}
+
+// ── Navigation ───────────────────────────────────────────────────────
+function nextCard() {
+    if (currentIndex < TOTAL - 1) {
+        currentIndex++;
+        renderCard(currentIndex);
+    } else {
+        // Show completed screen
+        document.getElementById("card-scene").style.display     = "none";
+        document.querySelector(".nav-row").style.display        = "none";
+        document.querySelector(".progress-section").style.display = "none";
+        document.getElementById("completed-screen").style.display = "block";
+    }
+}
+
+function prevCard() {
+    if (currentIndex > 0) {
+        currentIndex--;
+        renderCard(currentIndex);
+    }
+}
+
+// ── Keyboard support ─────────────────────────────────────────────────
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight" || e.key === "Enter") nextCard();
+    if (e.key === "ArrowLeft")                        prevCard();
+    if (e.key === " ")                                { e.preventDefault(); flipCard(); }
+});
+
+// ── Start ─────────────────────────────────────────────────────────────
+renderCard(0);
+</script>
+{% endif %}
+</body>
+</html>

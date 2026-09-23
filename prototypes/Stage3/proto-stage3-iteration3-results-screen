@@ -1,0 +1,48 @@
+function showResults() {
+    document.getElementById('quiz-screen').style.display    = 'none';
+    document.getElementById('results-screen').style.display = 'block';
+
+    const total = QUESTIONS.length;
+    const pct   = Math.round((score / total) * 100);
+
+    document.getElementById('final-score').textContent = score;
+    document.getElementById('final-label').textContent  = `/ ${total}`;
+
+    // Colour circle: green/amber/red based on percentage
+    const circle = document.getElementById('score-circle');
+    if (pct >= 70)      circle.style.borderColor = '#2ecc71';
+    else if (pct >= 40) circle.style.borderColor = '#f39c12';
+    else                circle.style.borderColor = '#e74c3c';
+
+    // Build per-question review list
+    userAnswers.forEach((ans, i) => {
+        const div = document.createElement('div');
+        div.className = `review-item ${ans.wasCorrect ? 'review-correct' : 'review-wrong'}`;
+        div.innerHTML = `
+            <div class='review-icon'>${ans.wasCorrect ? '✅' : '❌'}</div>
+            <div>
+                <div class='review-q'>Q${i+1}: ${ans.question}</div>
+                <div class='review-ans'>Your answer: ${ans.chosen} | Correct: ${ans.correct}</div>
+            </div>`;
+        reviewList.appendChild(div);
+    });
+
+    // POST score to Flask to save in database
+    fetch('/submit-quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            topic: TOPIC, difficulty: DIFFICULTY,
+            score: score, total_questions: total
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.new_category) {
+            // Show a notification if performance band changed
+            const notice = document.createElement('p');
+            notice.textContent = `🏆 Band updated to: ${data.new_category}`;
+            document.getElementById('results-band').after(notice);
+        }
+    });
+}

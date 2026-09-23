@@ -1,0 +1,9 @@
+<!-- BEFORE: placeholder with no functionality -->
+<button class='action-btn'>📋 Review Flashcards</button>
+
+<!-- AFTER: real navigation link -->
+<a href='/flashcards' class='action-btn'
+   style='text-decoration:none; display:flex;
+          align-items:center; justify-content:center;'>
+    📋 Flashcard Revision
+</a>

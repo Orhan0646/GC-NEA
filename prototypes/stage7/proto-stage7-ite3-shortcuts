@@ -1,0 +1,8 @@
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'Enter') nextCard();
+    if (e.key === 'ArrowLeft')                        prevCard();
+    if (e.key === ' ') {
+        e.preventDefault();  // stops browser scrolling on spacebar
+        flipCard();
+    }
+});

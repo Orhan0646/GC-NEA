@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Practice - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.95); border-radius: 10px; margin-bottom: 24px; }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .header-right { display: flex; gap: 12px; }
+        .btn-back { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-back:hover { background: #3a7bd5; }
+        .logout-btn { padding: 8px 18px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+        .section-card { background: white; border-radius: 10px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .section-title { font-size: 1.2rem; font-weight: 700; color: #1a2a6c; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #ecf0f1; }
+
+        /* Filter */
+        .filter-row { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-select { padding: 9px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; cursor: pointer; }
+        .btn-filter { padding: 9px 18px; background: #3a7bd5; color: white; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+        .btn-clear { padding: 9px 18px; background: #ecf0f1; color: #555; border: none; border-radius: 6px; font-size: 0.9rem; text-decoration: none; display: inline-block; }
+
+        /* Question cards */
+        .question-list { display: flex; flex-direction: column; gap: 14px; }
+        .q-card { border: 2px solid #ecf0f1; border-radius: 10px; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; transition: border-color 0.2s; }
+        .q-card:hover { border-color: #3a7bd5; }
+        .q-card.answered-unmarked { border-color: #f39c12; background: #fef9e7; }
+        .q-card.answered-marked   { border-color: #2ecc71; background: #eafaf1; }
+
+        .q-info { flex: 1; }
+        .q-topic { font-size: 0.78rem; font-weight: 700; color: #3a7bd5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .q-text  { font-size: 0.95rem; color: #2c3e50; font-weight: 500; line-height: 1.5; }
+
+        .q-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+        .mark-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; }
+        .mark-1 { background: #eafaf1; color: #1e8449; }
+        .mark-4 { background: #eaf4fd; color: #1a5276; }
+        .mark-6 { background: #f4ecf7; color: #6c3483; }
+        .mark-8 { background: #fdf2f2; color: #c0392b; }
+
+        .status-badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; }
+        .status-new      { background: #f2f3f4; color: #7f8c8d; }
+        .status-pending  { background: #fef9e7; color: #b7770d; }
+        .status-marked   { background: #eafaf1; color: #1e8449; }
+
+        .btn-attempt { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+        .btn-attempt:hover { background: #3a7bd5; }
+        .btn-view { padding: 8px 18px; background: #2ecc71; color: white; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+
+        .alert-success { padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; background: #eafaf1; color: #1e8449; border-left: 4px solid #2ecc71; }
+        .no-questions { text-align: center; padding: 40px; color: #7f8c8d; font-style: italic; }
+
+        .topic-header { font-size: 1rem; font-weight: 700; color: #1a2a6c; margin: 20px 0 10px; padding-left: 4px; }
+        .topic-header:first-child { margin-top: 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Exam Practice</div>
+        </div>
+        <div class="header-right">
+            <a href="/my-responses" class="btn-back" style="background:#9b59b6;">📝 My Results</a>
+            <a href="/student-dashboard" class="btn-back">← Dashboard</a>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    {% if request.args.get('submitted') %}
+    <div class="alert-success">✅ Your answer has been submitted. Your teacher will mark it soon.</div>
+    {% endif %}
+
+    <div class="section-card">
+        <div class="section-title">📝 AQA GCSE Geography — Exam Practice Questions</div>
+
+        <!-- Topic filter -->
+        <form method="GET" action="/exam-practice">
+            <div class="filter-row">
+                <label style="font-size:0.88rem;font-weight:600;color:#555;">Filter by topic:</label>
+                <select name="topic" class="filter-select">
+                    <option value="">All Topics</option>
+                    {% for t in topics %}
+                    <option value="{{ t }}" {% if topic_filter == t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-filter">Apply</button>
+                <a href="/exam-practice" class="btn-clear">Clear</a>
+            </div>
+        </form>
+
+        {% if questions %}
+        <div class="question-list">
+            {% set ns = namespace(current_topic='') %}
+            {% for q in questions %}
+                {% if q.topic != ns.current_topic %}
+                    {% set ns.current_topic = q.topic %}
+                    <div class="topic-header">🗺 {{ q.topic }}</div>
+                {% endif %}
+
+                {% set ans = answered.get(q.id) %}
+                {% set is_answered = ans is not none %}
+                {% set is_marked   = is_answered and ans.marked %}
+
+                <div class="q-card {% if is_marked %}answered-marked{% elif is_answered %}answered-unmarked{% endif %}">
+                    <div class="q-info">
+                        <div class="q-topic">{{ q.topic }}</div>
+                        <div class="q-text">{{ q.question_text }}</div>
+                    </div>
+                    <div class="q-meta">
+                        <span class="mark-badge mark-{{ q.marks }}">{{ q.marks }} mark{% if q.marks != 1 %}s{% endif %}</span>
+                        {% if is_marked %}
+                            <span class="status-badge status-marked">✅ Marked — {{ ans.marks_awarded }}/{{ q.marks }}</span>
+                            <a href="/my-responses" class="btn-view">View Feedback</a>
+                        {% elif is_answered %}
+                            <span class="status-badge status-pending">⏳ Awaiting marking</span>
+                        {% else %}
+                            <span class="status-badge status-new">Not attempted</span>
+                            <a href="/exam-question/{{ q.id }}" class="btn-attempt">Attempt →</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-questions">No exam questions found. Ask your teacher to add some.</p>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

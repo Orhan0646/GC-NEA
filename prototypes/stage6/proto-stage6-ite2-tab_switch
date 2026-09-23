@@ -1,0 +1,11 @@
+function switchTab(tabId, btn) {
+    // Deactivate all tabs and hide all panels
+    document.querySelectorAll('.tab-panel')
+        .forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn')
+        .forEach(b => b.classList.remove('active'));
+
+    // Activate the selected panel and button
+    document.getElementById('tab-' + tabId).classList.add('active');
+    btn.classList.add('active');
+}

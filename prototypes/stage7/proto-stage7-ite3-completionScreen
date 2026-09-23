@@ -1,0 +1,21 @@
+function nextCard() {
+    if (currentIndex < TOTAL - 1) {
+        currentIndex++;
+        renderCard(currentIndex);
+    } else {
+        // Hide flashcard UI, show completion screen
+        document.getElementById('card-scene').style.display       = 'none';
+        document.querySelector('.nav-row').style.display          = 'none';
+        document.querySelector('.progress-section').style.display = 'none';
+        document.getElementById('completed-screen').style.display = 'block';
+    }
+}
+
+<!-- Completion screen HTML (hidden div, revealed by JS) -->
+<div id='completed-screen' style='display:none;'>
+    <a href='/flashcards?topic={{ topic }}&difficulty={{ difficulty }}'>
+        🔄 Shuffle Again
+    </a>
+    <a href='/flashcards'>📚 New Topic</a>
+    <a href='/student-dashboard'>← Dashboard</a>
+</div>

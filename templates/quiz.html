@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; background: rgba(255,255,255,0.95);
+            border-radius: 10px; margin-bottom: 24px;
+        }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .header-meta { font-size: 0.9rem; color: #7f8c8d; text-align: right; }
+
+        /* ── Progress bar ── */
+        .quiz-progress { background: white; border-radius: 10px; padding: 16px 24px; margin-bottom: 20px; }
+        .progress-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; color: #555; font-weight: 600; }
+        .progress-track { height: 10px; background: #ecf0f1; border-radius: 5px; overflow: hidden; }
+        .progress-fill  { height: 100%; background: linear-gradient(90deg, #3a7bd5, #2ecc71); border-radius: 5px; transition: width 0.4s ease; }
+
+        /* ── Timer ── */
+        .timer-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+        .timer {
+            background: #1a2a6c; color: white; padding: 8px 20px;
+            border-radius: 20px; font-size: 1.1rem; font-weight: bold; letter-spacing: 1px;
+        }
+        .timer.warning { background: #e74c3c; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+        /* ── Question card ── */
+        .question-card {
+            background: white; border-radius: 12px; padding: 36px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12); margin-bottom: 20px;
+        }
+        .question-number { font-size: 0.85rem; color: #3a7bd5; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .question-text   { font-size: 1.25rem; color: #2c3e50; line-height: 1.6; margin-bottom: 28px; font-weight: 500; }
+
+        /* ── Answer options ── */
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            display: flex; align-items: center; gap: 16px;
+            padding: 16px 20px; background: #f8f9fa;
+            border: 2px solid #e1e5e9; border-radius: 8px;
+            cursor: pointer; transition: all 0.2s; text-align: left; font-size: 1rem; color: #2c3e50;
+        }
+        .option-btn:hover:not(:disabled) { border-color: #3a7bd5; background: #ebf3fd; transform: translateX(4px); }
+        .option-btn .letter {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: #3a7bd5; color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
+        }
+
+        /* Answer feedback states */
+        .option-btn.correct  { border-color: #2ecc71; background: #eafaf1; }
+        .option-btn.correct .letter  { background: #2ecc71; }
+        .option-btn.wrong    { border-color: #e74c3c; background: #fdf2f2; }
+        .option-btn.wrong .letter    { background: #e74c3c; }
+        .option-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        .option-btn:disabled { cursor: not-allowed; }
+
+        /* ── Feedback banner ── */
+        .feedback {
+            padding: 14px 20px; border-radius: 8px;
+            margin-top: 16px; font-weight: 600; font-size: 0.95rem; display: none;
+        }
+        .feedback.correct { background: #eafaf1; color: #1e8449; border-left: 4px solid #2ecc71; }
+        .feedback.wrong   { background: #fdf2f2; color: #c0392b; border-left: 4px solid #e74c3c; }
+
+        /* ── Navigation ── */
+        .nav-row { display: flex; justify-content: flex-end; margin-top: 20px; }
+        .btn-next {
+            padding: 14px 36px; background: #1a2a6c; color: white;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: background 0.2s; display: none;
+        }
+        .btn-next:hover { background: #3a7bd5; }
+
+        /* ── Results screen ── */
+        #results-screen { display: none; }
+        .results-card {
+            background: white; border-radius: 12px; padding: 48px 36px;
+            text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+        .score-circle {
+            width: 140px; height: 140px; border-radius: 50%;
+            border: 8px solid #3a7bd5;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .score-number { font-size: 2.4rem; font-weight: 800; color: #1a2a6c; }
+        .score-label  { font-size: 0.85rem; color: #7f8c8d; }
+        .results-title { font-size: 1.8rem; color: #2c3e50; margin-bottom: 8px; }
+        .results-band  { font-size: 1rem; color: #7f8c8d; margin-bottom: 32px; }
+
+        /* Per-question review */
+        .review-list { text-align: left; margin-top: 24px; }
+        .review-item {
+            display: flex; gap: 14px; align-items: flex-start;
+            padding: 14px; border-radius: 8px; margin-bottom: 10px; background: #f8f9fa;
+        }
+        .review-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+        .review-q    { font-size: 0.9rem; color: #2c3e50; font-weight: 500; }
+        .review-ans  { font-size: 0.85rem; color: #7f8c8d; margin-top: 4px; }
+        .review-correct { background: #eafaf1; }
+        .review-wrong   { background: #fdf2f2; }
+
+        .results-actions { display: flex; gap: 12px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+        .btn-action {
+            padding: 12px 28px; border-radius: 8px; font-size: 1rem;
+            font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none;
+        }
+        .btn-primary   { background: #1a2a6c; color: white; }
+        .btn-primary:hover { background: #3a7bd5; }
+        .btn-secondary { background: #ecf0f1; color: #2c3e50; }
+        .btn-secondary:hover { background: #d5d8dc; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+        </div>
+        <div class="header-meta">
+            <!-- topic and difficulty injected by Flask -->
+            <div><strong>{{ topic }}</strong></div>
+            <div>Difficulty: {{ difficulty | title }}</div>
+        </div>
+    </header>
+
+    <!-- ── Quiz screen ── -->
+    <div id="quiz-screen">
+        <div class="quiz-progress">
+            <div class="progress-label">
+                <span id="progress-text">Question 1 of {{ questions|length }}</span>
+                <span id="score-text">Score: 0</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar" style="width:0%"></div>
+            </div>
+        </div>
+
+        <div class="timer-row">
+            <div class="timer" id="timer">⏱ 0:30</div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-number" id="q-number">Question 1</div>
+            <div class="question-text"  id="q-text"></div>
+            <div class="options" id="options-container"></div>
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+        <div class="nav-row">
+            <button class="btn-next" id="btn-next">Next Question →</button>
+        </div>
+    </div>
+
+    <!-- ── Results screen ── -->
+    <div id="results-screen">
+        <div class="results-card">
+            <div class="score-circle" id="score-circle">
+                <div class="score-number" id="final-score">0</div>
+                <div class="score-label"  id="final-label">/ 0</div>
+            </div>
+            <h2 class="results-title" id="results-title">Quiz Complete!</h2>
+            <p class="results-band"   id="results-band"></p>
+
+            <div class="review-list" id="review-list"></div>
+
+            <div class="results-actions">
+                <a href="/student-dashboard" class="btn-action btn-primary">← Back to Dashboard</a>
+                <button class="btn-action btn-secondary" onclick="location.reload()">Try Again</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Questions array injected by Flask / Jinja2 ──────────────────────
+// Jinja2 serialises the Python list of dicts directly into JavaScript
+const QUESTIONS = {{ questions_json | safe }};
+const TOPIC     = "{{ topic }}";
+const DIFFICULTY = "{{ difficulty }}";
+
+// ── State variables ──────────────────────────────────────────────────
+let currentIndex = 0;   // Which question we are on
+let score        = 0;   // How many correct so far
+let answered     = false; // Has the current question been answered?
+let timerInterval = null; // Reference to the countdown interval
+let timeLeft      = 30;   // Seconds per question
+let userAnswers   = [];   // Store { question, chosen, correct, wasCorrect } per question
+
+// ── DOM references ───────────────────────────────────────────────────
+const qNumber    = document.getElementById("q-number");
+const qText      = document.getElementById("q-text");
+const optionsCtr = document.getElementById("options-container");
+const feedback   = document.getElementById("feedback");
+const btnNext    = document.getElementById("btn-next");
+const timerEl    = document.getElementById("timer");
+const progressBar= document.getElementById("progress-bar");
+const progressTxt= document.getElementById("progress-text");
+const scoreTxt   = document.getElementById("score-text");
+
+// ── Render a question ────────────────────────────────────────────────
+function renderQuestion() {
+    answered = false;
+    feedback.style.display = "none";
+    btnNext.style.display  = "none";
+
+    const q = QUESTIONS[currentIndex];
+    const total = QUESTIONS.length;
+
+    // Update header labels
+    qNumber.textContent = `Question ${currentIndex + 1}`;
+    qText.textContent   = q.question_text;
+
+    // Progress bar
+    const pct = (currentIndex / total) * 100;
+    progressBar.style.width = pct + "%";
+    progressTxt.textContent = `Question ${currentIndex + 1} of ${total}`;
+    scoreTxt.textContent    = `Score: ${score}`;
+
+    // Build option buttons A B C D
+    const letters = ["A", "B", "C", "D"];
+    const options  = [q.option_a, q.option_b, q.option_c, q.option_d];
+    optionsCtr.innerHTML = "";
+
+    options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerHTML = `<span class="letter">${letters[i]}</span> ${opt}`;
+        btn.dataset.letter = letters[i];
+        btn.addEventListener("click", () => handleAnswer(btn, letters[i], q.correct_answer, q));
+        optionsCtr.appendChild(btn);
+    });
+
+    // Start countdown timer
+    startTimer();
+}
+
+// ── Timer logic ──────────────────────────────────────────────────────
+function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = 30;
+    updateTimerDisplay();
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+
+        if (timeLeft <= 10) {
+            timerEl.classList.add("warning");   // Red pulsing when < 10s
+        }
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            // Time's up — treat as wrong answer
+            if (!answered) {
+                timeUp();
+            }
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
+    timerEl.textContent = `⏱ ${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+function timeUp() {
+    answered = true;
+    clearInterval(timerInterval);
+    timerEl.classList.remove("warning");
+
+    // Disable all buttons and highlight correct answer
+    const buttons = optionsCtr.querySelectorAll(".option-btn");
+    const q = QUESTIONS[currentIndex];
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        if (btn.dataset.letter === q.correct_answer) {
+            btn.classList.add("correct");
+        } else {
+            btn.classList.add("disabled");
+        }
+    });
+
+    // Show feedback
+    feedback.className = "feedback wrong";
+    feedback.textContent = `⏰ Time's up! The correct answer was ${q.correct_answer}.`;
+    feedback.style.display = "block";
+
+    userAnswers.push({ question: q.question_text, chosen: "—", correct: q.correct_answer, wasCorrect: false });
+    btnNext.style.display = "block";
+}
+
+// ── Handle an answer click ───────────────────────────────────────────
+function handleAnswer(clickedBtn, chosenLetter, correctLetter, q) {
+    if (answered) return;   // Prevent double-clicking
+    answered = true;
+    clearInterval(timerInterval);
+    timerEl.classList.remove("warning");
+
+    const isCorrect = chosenLetter === correctLetter;
+    if (isCorrect) score++;
+
+    // Disable all buttons and colour them
+    const buttons = optionsCtr.querySelectorAll(".option-btn");
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        if (btn.dataset.letter === correctLetter) {
+            btn.classList.add("correct");
+        } else if (btn === clickedBtn && !isCorrect) {
+            btn.classList.add("wrong");
+        } else {
+            btn.classList.add("disabled");
+        }
+    });
+
+    // Show feedback banner
+    feedback.className = `feedback ${isCorrect ? "correct" : "wrong"}`;
+    feedback.textContent = isCorrect
+        ? "✅ Correct! Well done."
+        : `❌ Incorrect. The correct answer was ${correctLetter}.`;
+    feedback.style.display = "block";
+
+    // Save this answer for the review screen
+    userAnswers.push({
+        question:   q.question_text,
+        chosen:     chosenLetter,
+        correct:    correctLetter,
+        wasCorrect: isCorrect
+    });
+
+    scoreTxt.textContent = `Score: ${score}`;
+    btnNext.style.display = "block";
+}
+
+// ── Move to next question or show results ────────────────────────────
+function nextQuestion() {
+    currentIndex++;
+    if (currentIndex < QUESTIONS.length) {
+        renderQuestion();
+    } else {
+        showResults();
+    }
+}
+
+// ── Results screen ───────────────────────────────────────────────────
+function showResults() {
+    document.getElementById("quiz-screen").style.display    = "none";
+    document.getElementById("results-screen").style.display = "block";
+
+    const total  = QUESTIONS.length;
+    const pct    = Math.round((score / total) * 100);
+
+    document.getElementById("final-score").textContent = score;
+    document.getElementById("final-label").textContent  = `/ ${total}`;
+
+    // Colour the score circle based on performance
+    const circle = document.getElementById("score-circle");
+    if (pct >= 70)      { circle.style.borderColor = "#2ecc71"; }
+    else if (pct >= 40) { circle.style.borderColor = "#f39c12"; }
+    else                { circle.style.borderColor = "#e74c3c"; }
+
+    document.getElementById("results-title").textContent =
+        pct >= 70 ? "Excellent work! 🎉" : pct >= 40 ? "Good effort! 📚" : "Keep practising! 💪";
+
+    // Determine performance band
+    let band = "Needs Improvement (U–3)";
+    if (pct >= 70) band = "Top Performer (7–9)";
+    else if (pct >= 40) band = "On Track (4–6)";
+    document.getElementById("results-band").textContent =
+        `You scored ${pct}% — Performance band: ${band}`;
+
+    // Build per-question review list
+    const reviewList = document.getElementById("review-list");
+    userAnswers.forEach((ans, i) => {
+        const div = document.createElement("div");
+        div.className = `review-item ${ans.wasCorrect ? "review-correct" : "review-wrong"}`;
+        div.innerHTML = `
+            <div class="review-icon">${ans.wasCorrect ? "✅" : "❌"}</div>
+            <div>
+                <div class="review-q">Q${i+1}: ${ans.question}</div>
+                <div class="review-ans">
+                    Your answer: <strong>${ans.chosen}</strong> &nbsp;|&nbsp;
+                    Correct: <strong>${ans.correct}</strong>
+                </div>
+            </div>`;
+        reviewList.appendChild(div);
+    });
+
+    // ── POST results to Flask ────────────────────────────────────────
+    // Send score data to /submit-quiz so Flask can save it to the DB
+    fetch("/submit-quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            topic:           TOPIC,
+            difficulty:      DIFFICULTY,
+            score:           score,
+            total_questions: total
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.new_category) {
+            // If the student's band changed, show a notification
+            const notice = document.createElement("p");
+            notice.style.cssText = "color:#1a2a6c;font-weight:600;margin-top:12px;";
+            notice.textContent = `🏆 Your performance band updated to: ${data.new_category}`;
+            document.getElementById("results-band").after(notice);
+        }
+    })
+    .catch(() => {}); // Silent fail — score display still works
+}
+
+// ── Wire up the Next button ──────────────────────────────────────────
+btnNext.addEventListener("click", nextQuestion);
+
+// ── Start the quiz ───────────────────────────────────────────────────
+renderQuestion();
+</script>
+</body>
+</html>

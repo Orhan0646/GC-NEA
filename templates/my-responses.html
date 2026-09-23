@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Exam Results - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 860px; margin: 0 auto; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.95); border-radius: 10px; margin-bottom: 24px; }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .header-right { display: flex; gap: 12px; }
+        .btn-back { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-back:hover { background: #3a7bd5; }
+        .logout-btn { padding: 8px 18px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+        .section-card { background: white; border-radius: 10px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .section-title { font-size: 1.2rem; font-weight: 700; color: #1a2a6c; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #ecf0f1; }
+
+        .response-card { border: 2px solid #ecf0f1; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+        .response-card.marked   { border-color: #2ecc71; }
+        .response-card.unmarked { border-color: #f39c12; }
+
+        .r-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .r-topic { font-size: 0.78rem; font-weight: 700; color: #3a7bd5; text-transform: uppercase; letter-spacing: 1px; }
+        .r-date  { font-size: 0.78rem; color: #7f8c8d; }
+
+        .q-text  { font-size: 0.95rem; font-weight: 600; color: #2c3e50; margin-bottom: 10px; line-height: 1.5; }
+
+        .box { border-radius: 6px; padding: 12px 16px; margin-bottom: 10px; }
+        .box-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .box-text  { font-size: 0.88rem; color: #2c3e50; line-height: 1.6; white-space: pre-wrap; }
+        .box-answer  { background: #f8f9fa; }
+        .box-feedback { background: #eafaf1; }
+        .box-feedback .box-label { color: #1e8449; }
+        .box-pending  { background: #fef9e7; }
+        .box-pending .box-label { color: #b7770d; }
+
+        .mark-display { display: inline-flex; align-items: center; gap: 8px; }
+        .mark-score { font-size: 1.3rem; font-weight: 800; color: #1a2a6c; }
+        .mark-max   { font-size: 0.9rem; color: #7f8c8d; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; }
+        .badge-marked   { background: #eafaf1; color: #1e8449; }
+        .badge-pending  { background: #fef9e7; color: #b7770d; }
+
+        .no-responses { text-align: center; padding: 40px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">My Exam Results</div>
+        </div>
+        <div class="header-right">
+            <a href="/exam-practice" class="btn-back">📝 Exam Practice</a>
+            <a href="/student-dashboard" class="btn-back">← Dashboard</a>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <div class="section-card">
+        <div class="section-title">📋 My Submitted Answers & Teacher Feedback</div>
+
+        {% if responses %}
+            {% for r in responses %}
+            <div class="response-card {% if r.marked %}marked{% else %}unmarked{% endif %}">
+                <div class="r-header">
+                    <div>
+                        <div class="r-topic">{{ r.topic }}</div>
+                        <div class="q-text">{{ r.question_text }}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        {% if r.marked %}
+                            <span class="badge badge-marked">✅ Marked</span>
+                            <div class="mark-display" style="margin-top:6px;">
+                                <span class="mark-score">{{ r.marks_awarded }}</span>
+                                <span class="mark-max">/ {{ r.max_marks }} marks</span>
+                            </div>
+                        {% else %}
+                            <span class="badge badge-pending">⏳ Awaiting marking</span>
+                        {% endif %}
+                        <div class="r-date" style="margin-top:4px;">{{ r.date_submitted }}</div>
+                    </div>
+                </div>
+
+                <!-- Student's answer -->
+                <div class="box box-answer">
+                    <div class="box-label" style="color:#7f8c8d;">Your Answer</div>
+                    <div class="box-text">{{ r.response_text }}</div>
+                </div>
+
+                <!-- Feedback or pending message -->
+                {% if r.marked %}
+                    <div class="box box-feedback">
+                        <div class="box-label">Teacher Feedback</div>
+                        <div class="box-text">
+                            {% if r.feedback %}{{ r.feedback }}
+                            {% else %}No written feedback provided for this response.{% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="box box-pending">
+                        <div class="box-label">Status</div>
+                        <div class="box-text">Your teacher has not marked this response yet. Check back later.</div>
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="no-responses">
+            <p style="font-size:2rem;margin-bottom:12px;">📝</p>
+            <p>You haven't submitted any exam answers yet.</p>
+            <a href="/exam-practice" style="color:#3a7bd5;font-weight:600;display:inline-block;margin-top:12px;">Go to Exam Practice →</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Questions - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.95); border-radius: 10px; margin-bottom: 24px; }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .header-right { display: flex; gap: 12px; align-items: center; }
+        .btn-back { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-back:hover { background: #3a7bd5; }
+        .logout-btn { padding: 8px 18px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+        .section-card { background: white; border-radius: 10px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .section-title { font-size: 1.2rem; font-weight: 700; color: #1a2a6c; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #ecf0f1; }
+
+        /* ── Stats ── */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 10px; padding: 18px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 2rem; font-weight: 800; color: #1a2a6c; }
+        .stat-label  { font-size: 0.82rem; color: #7f8c8d; margin-top: 4px; }
+
+        /* ── Alert banners ── */
+        .alert { padding: 12px 18px; border-radius: 8px; margin-bottom: 18px; font-weight: 600; font-size: 0.95rem; }
+        .alert-success { background: #eafaf1; color: #1e8449; border-left: 4px solid #2ecc71; }
+        .alert-error   { background: #fdf2f2; color: #c0392b; border-left: 4px solid #e74c3c; }
+
+        /* ── Add question form ── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 0.88rem; font-weight: 600; color: #2c3e50; }
+        .form-control { padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; transition: border-color 0.2s; }
+        .form-control:focus { border-color: #3a7bd5; outline: none; }
+        select.form-control { cursor: pointer; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; grid-column: 1 / -1; }
+        .option-group { display: flex; align-items: center; gap: 10px; }
+        .option-letter { width: 32px; height: 32px; border-radius: 50%; background: #3a7bd5; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+
+        .btn-submit { margin-top: 16px; padding: 12px 32px; background: #1a2a6c; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .btn-submit:hover { background: #3a7bd5; }
+
+        /* ── Filters ── */
+        .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-row label { font-size: 0.88rem; font-weight: 600; color: #555; }
+        .filter-select { padding: 8px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.88rem; cursor: pointer; }
+        .btn-filter { padding: 8px 18px; background: #3a7bd5; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; }
+        .btn-clear  { padding: 8px 18px; background: #ecf0f1; color: #555; border: none; border-radius: 6px; cursor: pointer; font-size: 0.88rem; text-decoration: none; display: inline-block; }
+
+        /* ── Questions table ── */
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #1a2a6c; }
+        thead th { padding: 11px 12px; text-align: left; color: white; font-size: 0.83rem; font-weight: 600; }
+        tbody tr { border-bottom: 1px solid #ecf0f1; }
+        tbody tr:hover { background: #f0f7ff; }
+        tbody td { padding: 11px 12px; font-size: 0.85rem; color: #2c3e50; vertical-align: middle; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+        .badge-easy   { background: #eafaf1; color: #1e8449; }
+        .badge-medium { background: #fef9e7; color: #b7770d; }
+        .badge-hard   { background: #fdf2f2; color: #c0392b; }
+
+        .q-text { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .btn-edit   { padding: 5px 12px; background: #f39c12; color: white; border: none; border-radius: 5px; font-size: 0.78rem; cursor: pointer; text-decoration: none; display: inline-block; font-weight: 600; }
+        .btn-edit:hover { background: #d68910; }
+        .btn-delete { padding: 5px 12px; background: #e74c3c; color: white; border: none; border-radius: 5px; font-size: 0.78rem; cursor: pointer; font-weight: 600; }
+        .btn-delete:hover { background: #c0392b; }
+
+        .no-data { text-align: center; padding: 30px; color: #7f8c8d; font-style: italic; }
+        @media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2,1fr); } .form-grid { grid-template-columns: 1fr; } .options-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Question Bank Manager</div>
+        </div>
+        <div class="header-right">
+            <a href="/teacher-dashboard" class="btn-back">← Dashboard</a>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <!-- ── Stats ── -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number">{{ total }}</div>
+            <div class="stat-label">Total Questions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ topic_counts.get('Coastal Landscapes', 0) }}</div>
+            <div class="stat-label">Coastal Landscapes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ topic_counts.get('River Landscapes', 0) }}</div>
+            <div class="stat-label">River Landscapes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ topic_counts.get('Resource Management', 0) }}</div>
+            <div class="stat-label">Resource Management</div>
+        </div>
+    </div>
+
+    <!-- ── Status alerts ── -->
+    {% if success %}
+    <div class="alert alert-success">✅ Question added successfully to the database.</div>
+    {% endif %}
+    {% if deleted %}
+    <div class="alert alert-error">🗑 Question deleted successfully.</div>
+    {% endif %}
+    {% if edited %}
+    <div class="alert alert-success">✏️ Question updated successfully.</div>
+    {% endif %}
+
+    <!-- ── Add question form ── -->
+    <div class="section-card">
+        <div class="section-title">➕ Add New Question</div>
+        <form method="POST" action="/add-question">
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label for="topic">Topic</label>
+                    <select name="topic" id="topic" class="form-control" required>
+                        <option value="">-- Select Topic --</option>
+                        {% for t in topics %}
+                        <option value="{{ t }}">{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="difficulty">Difficulty</label>
+                    <select name="difficulty" id="difficulty" class="form-control" required>
+                        <option value="">-- Select Difficulty --</option>
+                        {% for d in difficulties %}
+                        <option value="{{ d }}">{{ d | title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label for="question_text">Question Text</label>
+                    <input type="text" name="question_text" id="question_text"
+                           class="form-control" placeholder="Enter the question..." required>
+                </div>
+
+                <div class="options-grid">
+                    {% for letter in ['a', 'b', 'c', 'd'] %}
+                    <div class="option-group">
+                        <div class="option-letter">{{ letter | upper }}</div>
+                        <input type="text" name="option_{{ letter }}"
+                               class="form-control" placeholder="Option {{ letter | upper }}..." required>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label for="correct_answer">Correct Answer</label>
+                    <select name="correct_answer" id="correct_answer" class="form-control" required>
+                        <option value="">-- Select Correct Answer --</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+
+            </div>
+            <button type="submit" class="btn-submit">➕ Add Question</button>
+        </form>
+    </div>
+
+    <!-- ── Question list ── -->
+    <div class="section-card">
+        <div class="section-title">📋 All Questions ({{ questions | length }} shown)</div>
+
+        <!-- Filters -->
+        <form method="GET" action="/manage-questions">
+            <div class="filter-row">
+                <label>Filter by:</label>
+                <select name="topic" class="filter-select">
+                    <option value="">All Topics</option>
+                    {% for t in topics %}
+                    <option value="{{ t }}" {% if topic_filter == t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+                <select name="difficulty" class="filter-select">
+                    <option value="">All Difficulties</option>
+                    {% for d in difficulties %}
+                    <option value="{{ d }}" {% if diff_filter == d %}selected{% endif %}>{{ d | title }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-filter">Apply Filter</button>
+                <a href="/manage-questions" class="btn-clear">Clear</a>
+            </div>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Topic</th>
+                    <th>Difficulty</th>
+                    <th>Question</th>
+                    <th>A</th>
+                    <th>B</th>
+                    <th>C</th>
+                    <th>D</th>
+                    <th>Answer</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in questions %}
+                <tr>
+                    <td>{{ q.id }}</td>
+                    <td>{{ q.topic }}</td>
+                    <td><span class="badge badge-{{ q.difficulty }}">{{ q.difficulty | title }}</span></td>
+                    <td><div class="q-text" title="{{ q.question_text }}">{{ q.question_text }}</div></td>
+                    <td>{{ q.option_a }}</td>
+                    <td>{{ q.option_b }}</td>
+                    <td>{{ q.option_c }}</td>
+                    <td>{{ q.option_d }}</td>
+                    <td><strong>{{ q.correct_answer }}</strong></td>
+                    <td style="white-space:nowrap;">
+                        <a href="/edit-question/{{ q.id }}" class="btn-edit">✏️ Edit</a>
+                        &nbsp;
+                        <form method="POST" action="/delete-question/{{ q.id }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Delete this question? This cannot be undone.');">
+                            <button type="submit" class="btn-delete">🗑 Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="10" class="no-data">No questions found. Add one above!</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

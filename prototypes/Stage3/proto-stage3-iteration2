@@ -1,0 +1,69 @@
+// Questions injected by Jinja2
+const QUESTIONS = {{ questions_json | safe }};
+
+// State
+let currentIndex = 0;   // current question index
+let score        = 0;   // correct answers so far
+let answered     = false;
+let timerInterval = null;
+let timeLeft      = 30;  // seconds per question
+let userAnswers   = [];  // stores result of each question
+
+function renderQuestion() {
+    answered = false;
+    const q     = QUESTIONS[currentIndex];
+    const total = QUESTIONS.length;
+
+    qText.textContent = q.question_text;
+    progressBar.style.width = (currentIndex / total * 100) + '%';
+
+    // Build A B C D buttons dynamically
+    const letters  = ['A','B','C','D'];
+    const options  = [q.option_a, q.option_b, q.option_c, q.option_d];
+    optionsCtr.innerHTML = '';
+    options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class='letter'>${letters[i]}</span> ${opt}`;
+        btn.dataset.letter = letters[i];
+        btn.addEventListener('click', () =>
+            handleAnswer(btn, letters[i], q.correct_answer, q));
+        optionsCtr.appendChild(btn);
+    });
+    startTimer();
+}
+
+function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = 30;
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `⏱ 0:${timeLeft.toString().padStart(2,'0')}`;
+        if (timeLeft <= 10) timerEl.classList.add('warning');
+        if (timeLeft <= 0)  { clearInterval(timerInterval); timeUp(); }
+    }, 1000);
+}
+
+function handleAnswer(btn, chosen, correct, q) {
+    if (answered) return;
+    answered = true;
+    clearInterval(timerInterval);
+    const isCorrect = chosen === correct;
+    if (isCorrect) score++;
+
+    // Colour buttons: green = correct, red = wrong chosen
+    document.querySelectorAll('.option-btn').forEach(b => {
+        b.disabled = true;
+        if (b.dataset.letter === correct)             b.classList.add('correct');
+        else if (b === btn && !isCorrect)             b.classList.add('wrong');
+        else                                          b.classList.add('disabled');
+    });
+
+    feedback.className = `feedback ${isCorrect ? 'correct' : 'wrong'}`;
+    feedback.textContent = isCorrect
+        ? '✅ Correct! Well done.'
+        : `❌ Incorrect. The correct answer was ${correct}.`;
+    feedback.style.display = 'block';
+    userAnswers.push({ question: q.question_text, chosen, correct, wasCorrect: isCorrect });
+    scoreTxt.textContent = `Score: ${score}`;
+    btnNext.style.display = 'block';

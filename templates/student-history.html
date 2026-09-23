@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student History - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; background: rgba(255,255,255,0.95);
+            border-radius: 10px; margin-bottom: 24px;
+        }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .back-btn { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .back-btn:hover { background: #3a7bd5; }
+
+        .section-card { background: white; border-radius: 10px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .section-title { font-size: 1.2rem; font-weight: 700; color: #1a2a6c; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #ecf0f1; }
+
+        /* ── Student info card ── */
+        .student-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .info-box { padding: 16px; background: #f8f9fa; border-radius: 8px; text-align: center; }
+        .info-value { font-size: 1.3rem; font-weight: 800; color: #1a2a6c; }
+        .info-label { font-size: 0.8rem; color: #7f8c8d; margin-top: 4px; }
+
+        /* ── Progress bars ── */
+        .topic-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+        .topic-name { width: 200px; font-size: 0.9rem; font-weight: 600; color: #2c3e50; flex-shrink: 0; }
+        .bar-track { flex: 1; height: 14px; background: #ecf0f1; border-radius: 7px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 7px; }
+        .fill-green { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .fill-amber { background: linear-gradient(90deg, #e67e22, #f39c12); }
+        .fill-red   { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+        .bar-pct { width: 48px; text-align: right; font-size: 0.9rem; font-weight: 700; color: #2c3e50; }
+
+        /* ── Attempts table ── */
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #1a2a6c; }
+        thead th { padding: 12px 14px; text-align: left; color: white; font-size: 0.85rem; font-weight: 600; }
+        tbody tr { border-bottom: 1px solid #ecf0f1; }
+        tbody tr:hover { background: #f0f7ff; }
+        tbody td { padding: 12px 14px; font-size: 0.88rem; color: #2c3e50; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; }
+        .badge-green { background: #eafaf1; color: #1e8449; }
+        .badge-amber { background: #fef9e7; color: #b7770d; }
+        .badge-red   { background: #fdf2f2; color: #c0392b; }
+        .badge-top   { background: #eafaf1; color: #1e8449; }
+        .badge-medium { background: #fef9e7; color: #b7770d; }
+        .badge-needs { background: #fdf2f2; color: #c0392b; }
+
+        .no-data { color: #bdc3c7; font-style: italic; text-align: center; padding: 30px; }
+        @media (max-width: 700px) { .student-info { grid-template-columns: repeat(2,1fr); } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Student History</div>
+        </div>
+        <div style="display:flex;gap:12px;">
+            <a href="/teacher-dashboard" class="back-btn">← Back to Dashboard</a>
+            <a href="/student-report/{{ student.id }}" class="back-btn" style="background:#2ecc71;" target="_blank">🖨️ Print Report</a>
+        </div>
+    </header>
+
+    <!-- ── Student summary ── -->
+    <div class="section-card">
+        <div class="section-title">👤 {{ student.name }}</div>
+        <div class="student-info">
+            <div class="info-box">
+                <div class="info-value">{{ student.name }}</div>
+                <div class="info-label">Student Name</div>
+            </div>
+            <div class="info-box">
+                <div class="info-value">{{ student.class }}</div>
+                <div class="info-label">Class</div>
+            </div>
+            <div class="info-box">
+                <div class="info-value">{{ attempts | length }}</div>
+                <div class="info-label">Total Attempts</div>
+            </div>
+            <div class="info-box">
+                {% if student.performance_category == 'top' %}
+                    <div class="info-value" style="color:#1e8449;">Top</div>
+                {% elif student.performance_category == 'medium' %}
+                    <div class="info-value" style="color:#b7770d;">On Track</div>
+                {% else %}
+                    <div class="info-value" style="color:#c0392b;">Needs Support</div>
+                {% endif %}
+                <div class="info-label">Performance Band</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Topic progress ── -->
+    <div class="section-card">
+        <div class="section-title">📊 Topic Progress</div>
+        {% set topics = ["Coastal Landscapes", "River Landscapes", "Resource Management"] %}
+        {% for topic in topics %}
+            {% set data = progress.get(topic, {}) %}
+            {% set pct = data.get('percentage', 0) or 0 %}
+            {% set cat = data.get('category', 'red') %}
+            <div class="topic-row">
+                <div class="topic-name">{{ topic }}</div>
+                <div class="bar-track">
+                    <div class="bar-fill fill-{{ cat }}" style="width: {{ pct }}%;"></div>
+                </div>
+                <div class="bar-pct">
+                    {% if pct %}{{ pct }}%{% else %}0%{% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- ── Full quiz history ── -->
+    <div class="section-card">
+        <div class="section-title">📋 Full Quiz History</div>
+        {% if attempts %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Topic</th>
+                    <th>Difficulty</th>
+                    <th>Score</th>
+                    <th>Percentage</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attempts %}
+                <tr>
+                    <td>{{ a.date_taken }}</td>
+                    <td>{{ a.topic }}</td>
+                    <td style="text-transform: capitalize;">{{ a.difficulty }}</td>
+                    <td>{{ a.score }} / {{ a.total_questions }}</td>
+                    <td><strong>{{ a.percentage }}%</strong></td>
+                    <td>
+                        {% if a.percentage >= 70 %}
+                            <span class="badge badge-green">Good</span>
+                        {% elif a.percentage >= 40 %}
+                            <span class="badge badge-amber">Average</span>
+                        {% else %}
+                            <span class="badge badge-red">Needs Work</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-data">This student has not completed any quizzes yet.</p>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

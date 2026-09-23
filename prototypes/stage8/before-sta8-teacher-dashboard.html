@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; background: rgba(255,255,255,0.95);
+            border-radius: 10px; margin-bottom: 24px;
+        }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .teacher-name { font-size: 0.95rem; color: #555; }
+        .logout-btn { padding: 8px 18px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .logout-btn:hover { background: #c0392b; }
+
+        /* ── Stats row ── */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 10px; padding: 20px 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 2.2rem; font-weight: 800; color: #1a2a6c; }
+        .stat-label  { font-size: 0.85rem; color: #7f8c8d; margin-top: 4px; }
+
+        /* ── Topic averages ── */
+        .section-card { background: white; border-radius: 10px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .section-title { font-size: 1.2rem; font-weight: 700; color: #1a2a6c; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #ecf0f1; }
+        .topic-bars { display: flex; flex-direction: column; gap: 14px; }
+        .topic-row { display: flex; align-items: center; gap: 14px; }
+        .topic-name { width: 200px; font-size: 0.9rem; font-weight: 600; color: #2c3e50; flex-shrink: 0; }
+        .bar-track { flex: 1; height: 14px; background: #ecf0f1; border-radius: 7px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 7px; transition: width 0.5s ease; }
+        .fill-green { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .fill-amber { background: linear-gradient(90deg, #e67e22, #f39c12); }
+        .fill-red   { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+        .bar-pct { width: 48px; text-align: right; font-size: 0.9rem; font-weight: 700; color: #2c3e50; }
+
+        /* ── Band summary ── */
+        .band-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .band-card { padding: 16px; border-radius: 8px; text-align: center; }
+        .band-card.top   { background: #eafaf1; border: 2px solid #2ecc71; }
+        .band-card.medium { background: #fef9e7; border: 2px solid #f39c12; }
+        .band-card.needs { background: #fdf2f2; border: 2px solid #e74c3c; }
+        .band-count { font-size: 2rem; font-weight: 800; }
+        .band-card.top   .band-count { color: #1e8449; }
+        .band-card.medium .band-count { color: #b7770d; }
+        .band-card.needs  .band-count { color: #c0392b; }
+        .band-label { font-size: 0.85rem; color: #555; margin-top: 4px; }
+
+        /* ── Student table ── */
+        .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+        .search-box { padding: 9px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; width: 240px; }
+        .filter-select { padding: 9px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #1a2a6c; }
+        thead th { padding: 12px 14px; text-align: left; color: white; font-size: 0.85rem; font-weight: 600; }
+        tbody tr { border-bottom: 1px solid #ecf0f1; transition: background 0.15s; }
+        tbody tr:hover { background: #f0f7ff; }
+        tbody td { padding: 12px 14px; font-size: 0.88rem; color: #2c3e50; vertical-align: middle; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; }
+        .badge-top    { background: #eafaf1; color: #1e8449; }
+        .badge-medium { background: #fef9e7; color: #b7770d; }
+        .badge-needs  { background: #fdf2f2; color: #c0392b; }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+        .dot-green { background: #2ecc71; }
+        .dot-amber { background: #f39c12; }
+        .dot-red   { background: #e74c3c; }
+        .dot-none  { background: #bdc3c7; }
+
+        .btn-history { padding: 5px 12px; background: #1a2a6c; color: white; border: none; border-radius: 5px; font-size: 0.8rem; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-history:hover { background: #3a7bd5; }
+
+        .btn-flag { padding: 5px 12px; border: 2px solid #e74c3c; background: white; color: #e74c3c; border-radius: 5px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .btn-flag.flagged { background: #e74c3c; color: white; }
+        .btn-flag:hover { opacity: 0.85; }
+
+        .flagged-row { background: #fff8f8 !important; }
+
+        .no-data { color: #bdc3c7; font-style: italic; }
+        @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(2,1fr); } .band-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Teacher Control Panel</div>
+        </div>
+        <div class="header-right">
+            <span class="teacher-name">👩‍🏫 {{ name }}</span>
+            <a href="/manage-questions" class="btn-back" style="background:#2ecc71;">📝 Manage Questions</a>
+            <a href="/leaderboard" class="btn-back" style="background:#9b59b6;">🏆 Leaderboard</a>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <!-- ── Stats row ── -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_students }}</div>
+            <div class="stat-label">Total Students</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_attempts }}</div>
+            <div class="stat-label">Quiz Attempts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ category_counts.get('top', 0) }}</div>
+            <div class="stat-label">Top Performers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color:#e74c3c;">{{ category_counts.get('needs_improvement', 0) }}</div>
+            <div class="stat-label">Need Support</div>
+        </div>
+    </div>
+
+    <!-- ── Topic averages ── -->
+    <div class="section-card">
+        <div class="section-title">📊 Class Averages by Topic</div>
+        {% set topics = [
+            ("Coastal Landscapes",  "Coastal Landscapes"),
+            ("River Landscapes",    "River Landscapes"),
+            ("Resource Management", "Resource Management")
+        ] %}
+        <div class="topic-bars">
+            {% for label, key in topics %}
+                {% set pct = topic_averages.get(key, 0) or 0 %}
+                {% set colour = 'green' if pct >= 70 else 'amber' if pct >= 40 else 'red' %}
+                <div class="topic-row">
+                    <div class="topic-name">{{ label }}</div>
+                    <div class="bar-track">
+                        <div class="bar-fill fill-{{ colour }}" style="width: {{ pct }}%;"></div>
+                    </div>
+                    <div class="bar-pct">
+                        {% if pct %}{{ pct }}%{% else %}<span class="no-data">No data</span>{% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ── Performance bands ── -->
+    <div class="section-card">
+        <div class="section-title">🎯 Performance Band Summary</div>
+        <div class="band-grid">
+            <div class="band-card top">
+                <div class="band-count">{{ category_counts.get('top', 0) }}</div>
+                <div class="band-label">🟢 Top Performers (7–9)</div>
+            </div>
+            <div class="band-card medium">
+                <div class="band-count">{{ category_counts.get('medium', 0) }}</div>
+                <div class="band-label">🟡 On Track (4–6)</div>
+            </div>
+            <div class="band-card needs">
+                <div class="band-count">{{ category_counts.get('needs_improvement', 0) }}</div>
+                <div class="band-label">🔴 Needs Support (U–3)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Student table ── -->
+    <div class="section-card">
+        <div class="section-title">👥 Student List</div>
+        <div class="table-controls">
+            <input type="text" class="search-box" id="search-box"
+                   placeholder="🔍 Search by name..." onkeyup="filterTable()">
+            <select class="filter-select" id="band-filter" onchange="filterTable()">
+                <option value="">All Bands</option>
+                <option value="top">Top Performers</option>
+                <option value="medium">On Track</option>
+                <option value="needs_improvement">Needs Support</option>
+            </select>
+        </div>
+
+        <table id="student-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Band</th>
+                    <th>Coastal</th>
+                    <th>River</th>
+                    <th>Resource</th>
+                    <th>History</th>
+                    <th>Flag</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr class="student-row {% if s.flagged %}flagged-row{% endif %}"
+                    data-name="{{ s.name | lower }}"
+                    data-band="{{ s.performance_category }}">
+                    <td>
+                        {% if s.flagged %}
+                        <span title="Flagged for support">🚩</span>
+                        {% endif %}
+                        {{ s.name }}
+                    </td>
+                    <td>{{ s.class }}</td>
+                    <td>
+                        {% if s.performance_category == 'top' %}
+                            <span class="badge badge-top">Top</span>
+                        {% elif s.performance_category == 'medium' %}
+                            <span class="badge badge-medium">On Track</span>
+                        {% else %}
+                            <span class="badge badge-needs">Needs Support</span>
+                        {% endif %}
+                    </td>
+                    <!-- Coastal -->
+                    <td>
+                        {% if s.coastal_pct is not none %}
+                            <span class="dot dot-{{ s.coastal_cat }}"></span>{{ s.coastal_pct }}%
+                        {% else %}<span class="no-data">—</span>{% endif %}
+                    </td>
+                    <!-- River -->
+                    <td>
+                        {% if s.river_pct is not none %}
+                            <span class="dot dot-{{ s.river_cat }}"></span>{{ s.river_pct }}%
+                        {% else %}<span class="no-data">—</span>{% endif %}
+                    </td>
+                    <!-- Resource -->
+                    <td>
+                        {% if s.resource_pct is not none %}
+                            <span class="dot dot-{{ s.resource_cat }}"></span>{{ s.resource_pct }}%
+                        {% else %}<span class="no-data">—</span>{% endif %}
+                    </td>
+                    <td>
+                        <a href="/student-history/{{ s.id }}" class="btn-history">View →</a>
+                    </td>
+                    <td>
+                        <button class="btn-flag {% if s.flagged %}flagged{% endif %}"
+                                id="flag-btn-{{ s.id }}"
+                                onclick="toggleFlag({{ s.id }}, this)">
+                            {% if s.flagged %}Unflag{% else %}Flag{% endif %}
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:30px;color:#7f8c8d;">
+                        No students found in the database.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// ── Search and filter table ──────────────────────────────────────────
+function filterTable() {
+    const search = document.getElementById("search-box").value.toLowerCase();
+    const band   = document.getElementById("band-filter").value;
+    const rows   = document.querySelectorAll(".student-row");
+
+    rows.forEach(row => {
+        const nameMatch = row.dataset.name.includes(search);
+        const bandMatch = !band || row.dataset.band === band;
+        row.style.display = nameMatch && bandMatch ? "" : "none";
+    });
+}
+
+// ── Flag / unflag a student ─────────────────────────────────────────
+function toggleFlag(studentId, btn) {
+    fetch(`/flag-student/${studentId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const row = btn.closest("tr");
+        if (data.flagged) {
+            btn.textContent = "Unflag";
+            btn.classList.add("flagged");
+            row.classList.add("flagged-row");
+        } else {
+            btn.textContent = "Flag";
+            btn.classList.remove("flagged");
+            row.classList.remove("flagged-row");
+        }
+    })
+    .catch(() => alert("Could not update flag. Please try again."));
+}
+</script>
+</body>
+</html>

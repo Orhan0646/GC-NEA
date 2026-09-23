@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - GeoChallenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #3a7bd5);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .tagline {
+            font-size: 1rem;
+            color: #3498db;
+        }
+        
+        .dashboard {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .page-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+        }
+        
+        .user-info {
+            color: #7f8c8d;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-back {
+            background: #95a5a6;
+            margin-bottom: 20px;
+        }
+        
+        .btn-back:hover {
+            background: #7f8c8d;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .dashboard-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .dashboard-card h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 1.3rem;
+        }
+        
+        .topic-selection, .difficulty-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .topic-btn, .difficulty-btn {
+            padding: 12px 15px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 5px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .topic-btn:hover, .difficulty-btn:hover {
+            background: #e3f2fd;
+            transform: translateY(-2px);
+        }
+        
+        .difficulty-btn.needs-improvement {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .difficulty-btn.medium {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .difficulty-btn.top {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .progress-section {
+            grid-column: 1 / -1;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            border-radius: 5px;
+        }
+        
+        .color-code {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .green { background: #2ecc71; }
+        .amber { background: #f39c12; }
+        .red { background: #e74c3c; }
+        
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .action-btn {
+            padding: 10px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .action-btn:hover {
+            background: #2980b9;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GeoChallenge</h1>
+            <p class="tagline">Student Dashboard</p>
+        </header>
+        
+        <div class="dashboard">
+            <a href="{{ url_for('logout') }}" class="btn btn-back">← Logout</a>
+            
+            <div class="page-header">
+                <h2 class="page-title">Student Dashboard</h2>
+                <div class="user-info">
+                    <span>Welcome, <strong>{{ student['full_name'] }}</strong></span>
+                </div>
+            </div>
+            
+            <form id="quiz-form" method="POST" action="{{ url_for('start_quiz') }}">
+                <input type="hidden" name="topic" id="selected-topic">
+                <input type="hidden" name="difficulty" id="selected-difficulty">
+            </form>
+            
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>Select Topic</h3>
+                    <div class="topic-selection">
+                        <button type="button" class="topic-btn" data-topic="Coastal Landscapes">Coastal Landscapes</button>
+                        <button type="button" class="topic-btn" data-topic="River Landscapes">River Landscapes</button>
+                        <button type="button" class="topic-btn" data-topic="Resource Management">Resource Management</button>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <h3>Select Difficulty Level</h3>
+                    <div class="difficulty-selection">
+                        <button type="button" class="difficulty-btn needs-improvement" data-difficulty="Basic">
+                            <span class="color-code red"></span> Needs Improvement (U-3)
+                        </button>
+                        <button type="button" class="difficulty-btn medium" data-difficulty="Standard">
+                            <span class="color-code amber"></span> Medium (4-6)
+                        </button>
+                        <button type="button" class="difficulty-btn top" data-difficulty="Advanced">
+                            <span class="color-code green"></span> Top (7-9)
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card progress-section">
+                    <h3>Your Progress</h3>
+                    <p>Current Performance Category: <strong>{{ student['current_category'] }} (Target: {{ student['target_grade'] }})</strong></p>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:{{ overall_avg }}%;"></div>
+                    </div>
+                    <p>Overall Performance: {{ "%.1f"|format(overall_avg) }}%</p>
+                    
+                    <h4 style="margin-top: 20px;">Topic Performance</h4>
+                    {% for topic, avg in topic_scores.items() %}
+                        <p>
+                            {{ topic }}: 
+                            {% if avg is not none %}
+                                {% if avg >= 70 %}
+                                    <span class="color-code green"></span> {{ "%.1f"|format(avg) }}%
+                                {% elif avg >= 50 %}
+                                    <span class="color-code amber"></span> {{ "%.1f"|format(avg) }}%
+                                {% else %}
+                                    <span class="color-code red"></span> {{ "%.1f"|format(avg) }}%
+                                {% endif %}
+                            {% else %}
+                                <span class="color-code"></span> No data
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+                
+                <div class="dashboard-card">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="document.getElementById('quiz-form').submit();">Start New Quiz</button>
+                        <button class="action-btn">Review Flashcards</button>
+                        <button class="action-btn">View Performance Reports</button>
+                        <button class="action-btn">Practice Diagrams</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Handle topic and difficulty selection for quiz
+        let selectedTopic = '';
+        let selectedDifficulty = '';
+        
+        document.querySelectorAll('.topic-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                selectedTopic = this.dataset.topic;
+                document.getElementById('selected-topic').value = selectedTopic;
+                // If both are selected, submit form (optional)
+                if (selectedTopic && selectedDifficulty) {
+                    document.getElementById('quiz-form').submit();
+                }
+            });
+        });
+        
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                selectedDifficulty = this.dataset.difficulty;
+                document.getElementById('selected-difficulty').value = selectedDifficulty;
+                if (selectedTopic && selectedDifficulty) {
+                    document.getElementById('quiz-form').submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

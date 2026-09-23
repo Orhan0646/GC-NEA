@@ -1,0 +1,59 @@
+@app.route('/submit-quiz', methods=['POST'])
+def submit_quiz():
+    if not login_required('student'):
+        return jsonify({'error': 'Not logged in'}), 401
+
+    data            = request.get_json()
+    topic           = data.get('topic')
+    score           = int(data.get('score', 0))
+    total_questions = int(data.get('total_questions', 1))
+
+    student_id = session['user_id']
+
+    conn   = get_connection()
+    cursor = conn.cursor()
+
+    # 1. Save quiz attempt to quiz_results
+    cursor.execute('''
+        INSERT INTO quiz_results (student_id, topic, difficulty, score, total_questions)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (student_id, topic, data.get('difficulty'), score, total_questions))
+
+    # 2. Recalculate average percentage for this topic
+    cursor.execute('''
+        SELECT ROUND(AVG(CAST(score AS FLOAT) / total_questions * 100), 1) as avg_pct
+        FROM quiz_results WHERE student_id = ? AND topic = ?
+    ''', (student_id, topic))
+    avg_pct = cursor.fetchone()['avg_pct']
+
+    # 3. Assign colour category from average
+    if avg_pct >= 70:   category = 'green'
+    elif avg_pct >= 40: category = 'amber'
+    else:               category = 'red'
+
+    # 4. Update progress table
+    cursor.execute('''
+        UPDATE progress SET percentage = ?, category = ?
+        WHERE student_id = ? AND topic = ?
+    ''', (avg_pct, category, student_id, topic))
+
+    # 5. Update overall performance band on student record
+    cursor.execute('''
+        SELECT ROUND(AVG(CAST(score AS FLOAT) / total_questions * 100), 1) as overall
+        FROM quiz_results WHERE student_id = ?
+    ''', (student_id,))
+    overall = cursor.fetchone()['overall'] or 0
+
+    new_category = 'top' if overall >= 70 else 'medium' if overall >= 40 else 'needs_improvement'
+    old_category = session.get('performance_category')
+    cursor.execute('UPDATE students SET performance_category = ? WHERE id = ?',
+                   (new_category, student_id))
+    session['performance_category'] = new_category
+
+    conn.commit()
+    conn.close()
+
+    response = {'status': 'saved', 'percentage': avg_pct, 'category': category}
+    if new_category != old_category:
+        response['new_category'] = new_category  # JavaScript shows notification
+    return jsonify(response)

@@ -1,0 +1,14 @@
+<!-- Student dashboard — Exam Practice button added to Quick Actions -->
+<a href='/exam-practice' class='action-btn'
+   style='text-decoration:none;display:flex;align-items:center;justify-content:center;'>
+    ✏️ Exam Practice
+</a>
+
+<!-- Teacher dashboard header — Mark Responses with badge + Mark Scheme button -->
+<a href='/mark-responses' class='btn-back' style='background:#e74c3c;'>
+    ✏️ Mark Responses
+    {% if ungraded_count > 0 %} ({{ ungraded_count }}){% endif %}
+</a>
+<a href='/mark-scheme' class='btn-back' style='background:#8e44ad;'>
+    📋 Mark Scheme
+</a>

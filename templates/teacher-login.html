@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Login - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); color: #333; min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        .container { max-width: 500px; width: 100%; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(255,255,255,0.9); border-radius: 10px; }
+        h1 { font-size: 2rem; color: #2c3e50; }
+        .tagline { color: #2ecc71; }
+        .login-container { background: white; border-radius: 10px; padding: 40px 30px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .login-icon { font-size: 4rem; margin-bottom: 20px; }
+        .login-title { font-size: 1.8rem; margin-bottom: 10px; color: #2c3e50; }
+        .login-subtitle { color: #7f8c8d; margin-bottom: 30px; }
+        .login-form { display: flex; flex-direction: column; gap: 20px; }
+        .form-group { text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50; }
+        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #e1e5e9; border-radius: 5px; font-size: 1rem; }
+        .form-control:focus { border-color: #2ecc71; outline: none; }
+        .btn { display: inline-block; padding: 12px 25px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 600; width: 100%; text-decoration: none; transition: background 0.3s; }
+        .btn:hover { background: #27ae60; }
+        .btn-back { background: #95a5a6; width: auto; padding: 10px 20px; margin-bottom: 20px; display: inline-block; }
+        .btn-back:hover { background: #7f8c8d; }
+        .error-message { color: #e74c3c; background: #fde8e8; padding: 10px 15px; border-radius: 5px; margin-top: 10px; }
+        .demo-credentials { margin-top: 25px; padding: 15px; background: #eafaf1; border-radius: 5px; font-size: 0.9rem; }
+        .demo-credentials h4 { margin-bottom: 10px; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GeoChallenge</h1>
+            <p class="tagline">Teacher Login</p>
+        </header>
+        <div class="login-container">
+            <a href="/" class="btn btn-back">← Back to Home</a>
+            <div class="login-icon">👩‍🏫</div>
+            <h2 class="login-title">Teacher Login</h2>
+            <p class="login-subtitle">Enter your credentials to access the teacher control panel</p>
+
+            <form class="login-form" method="POST" action="/teacher-login">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username"
+                           class="form-control" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password"
+                           class="form-control" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+
+                {% if error %}
+                <div class="error-message">{{ error }}</div>
+                {% endif %}
+            </form>
+
+            <div class="demo-credentials">
+                <h4>Demo Credentials</h4>
+                <p><strong>Username:</strong> teacher</p>
+                <p><strong>Password:</strong> teacher123</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

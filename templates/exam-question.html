@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Question - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 860px; margin: 0 auto; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.95); border-radius: 10px; margin-bottom: 24px; }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .btn-back { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-back:hover { background: #3a7bd5; }
+
+        .section-card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); margin-bottom: 20px; }
+
+        .q-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .q-topic { font-size: 0.78rem; font-weight: 700; color: #3a7bd5; text-transform: uppercase; letter-spacing: 1px; }
+        .mark-badge { display: inline-block; padding: 6px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; }
+        .mark-1 { background: #eafaf1; color: #1e8449; }
+        .mark-4 { background: #eaf4fd; color: #1a5276; }
+        .mark-6 { background: #f4ecf7; color: #6c3483; }
+        .mark-8 { background: #fdf2f2; color: #c0392b; }
+
+        .q-text { font-size: 1.15rem; color: #2c3e50; line-height: 1.7; font-weight: 500; margin-bottom: 8px; }
+        .q-hint { font-size: 0.85rem; color: #7f8c8d; margin-bottom: 24px; }
+
+        .word-guide { background: #f8f9fa; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; font-size: 0.88rem; color: #555; }
+        .word-guide strong { color: #1a2a6c; }
+
+        textarea { width: 100%; padding: 14px 16px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 0.95rem; line-height: 1.6; resize: vertical; min-height: 180px; font-family: inherit; transition: border-color 0.2s; }
+        textarea:focus { border-color: #3a7bd5; outline: none; }
+
+        .word-count { text-align: right; font-size: 0.8rem; color: #7f8c8d; margin-top: 6px; }
+
+        .btn-submit { margin-top: 16px; padding: 13px 40px; background: #1a2a6c; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .btn-submit:hover { background: #3a7bd5; }
+
+        .alert-error { padding: 12px 18px; border-radius: 8px; margin-bottom: 16px; font-weight: 600; background: #fdf2f2; color: #c0392b; border-left: 4px solid #e74c3c; }
+
+        /* Already answered view */
+        .existing-card { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+        .existing-card h3 { font-size: 1rem; color: #1a2a6c; margin-bottom: 10px; }
+        .existing-text { font-size: 0.92rem; color: #2c3e50; line-height: 1.6; white-space: pre-wrap; }
+        .feedback-card { background: #eafaf1; border-left: 4px solid #2ecc71; border-radius: 8px; padding: 16px 20px; }
+        .feedback-card h3 { color: #1e8449; margin-bottom: 8px; }
+        .pending-card  { background: #fef9e7; border-left: 4px solid #f39c12; border-radius: 8px; padding: 16px 20px; }
+        .pending-card h3 { color: #b7770d; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Exam Question</div>
+        </div>
+        <a href="/exam-practice" class="btn-back">← Back to Questions</a>
+    </header>
+
+    <div class="section-card">
+        <div class="q-header">
+            <div class="q-topic">{{ question.topic }}</div>
+            <span class="mark-badge mark-{{ question.marks }}">{{ question.marks }} mark{% if question.marks != 1 %}s{% endif %}</span>
+        </div>
+
+        <div class="q-text">{{ question.question_text }}</div>
+
+        {% if question.marks == 1 %}
+        <div class="q-hint">💡 Write one clear point. One sentence is usually enough for 1 mark.</div>
+        {% elif question.marks == 4 %}
+        <div class="q-hint">💡 Make 4 clear points. Use geographical terminology. Around 80–120 words.</div>
+        {% elif question.marks == 6 %}
+        <div class="q-hint">💡 Write in detail using Point → Explain → Example structure. Around 150–200 words.</div>
+        {% elif question.marks == 8 %}
+        <div class="q-hint">💡 This is an extended writing question. Include both sides of an argument, use named examples, and reach a conclusion. Around 250–350 words.</div>
+        {% endif %}
+
+        {% if existing %}
+            <!-- Already submitted -->
+            <div class="existing-card">
+                <h3>📝 Your submitted answer:</h3>
+                <div class="existing-text">{{ existing.response_text }}</div>
+            </div>
+
+            {% if existing.marked %}
+            <div class="feedback-card">
+                <h3>✅ Teacher Feedback — {{ existing.marks_awarded }} / {{ question.marks }} marks</h3>
+                <p style="margin-top:8px;color:#2c3e50;line-height:1.6;">
+                    {% if existing.feedback %}{{ existing.feedback }}
+                    {% else %}No written feedback provided.{% endif %}
+                </p>
+            </div>
+            {% else %}
+            <div class="pending-card">
+                <h3>⏳ Awaiting Marking</h3>
+                <p style="margin-top:6px;color:#7f8c8d;font-size:0.9rem;">Your teacher has not marked this response yet. Check back later.</p>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <!-- Answer form -->
+            {% if error %}
+            <div class="alert-error">⚠️ {{ error }}</div>
+            {% endif %}
+
+            {% if question.marks >= 4 %}
+            <div class="word-guide">
+                <strong>Word guide:</strong>
+                1 mark ≈ 15–20 words &nbsp;|&nbsp;
+                4 marks ≈ 80–120 words &nbsp;|&nbsp;
+                6 marks ≈ 150–200 words &nbsp;|&nbsp;
+                8 marks ≈ 250–350 words
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/exam-question/{{ question.id }}">
+                <textarea name="response_text" id="response-box"
+                          placeholder="Write your answer here..."
+                          oninput="updateCount()"></textarea>
+                <div class="word-count" id="word-count">0 words</div>
+                <button type="submit" class="btn-submit">Submit Answer →</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function updateCount() {
+    const text = document.getElementById("response-box").value.trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    document.getElementById("word-count").textContent = words + " word" + (words !== 1 ? "s" : "");
+}
+</script>
+</body>
+</html>

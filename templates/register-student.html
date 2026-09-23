@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Student - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
+        .container { max-width: 600px; width: 100%; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.95); border-radius: 10px; margin-bottom: 24px; }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .btn-back { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-back:hover { background: #3a7bd5; }
+
+        .card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+        .card-title { font-size: 1.4rem; font-weight: 700; color: #1a2a6c; margin-bottom: 8px; }
+        .card-sub   { font-size: 0.9rem; color: #7f8c8d; margin-bottom: 28px; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+        .form-group label { font-size: 0.88rem; font-weight: 600; color: #2c3e50; }
+        .form-control { padding: 11px 14px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 0.95rem; transition: border-color 0.2s; }
+        .form-control:focus { border-color: #3a7bd5; outline: none; }
+        .form-hint { font-size: 0.78rem; color: #7f8c8d; margin-top: 2px; }
+
+        .btn-submit { width: 100%; padding: 13px; background: #2ecc71; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+        .btn-submit:hover { background: #27ae60; }
+
+        .alert { padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; font-size: 0.95rem; }
+        .alert-error   { background: #fdf2f2; color: #c0392b; border-left: 4px solid #e74c3c; }
+        .alert-success { background: #eafaf1; color: #1e8449; border-left: 4px solid #2ecc71; }
+
+        .password-box { background: #f0f7ff; border: 2px dashed #3a7bd5; border-radius: 8px; padding: 18px 20px; margin-top: 16px; }
+        .password-box h4 { color: #1a2a6c; margin-bottom: 8px; font-size: 0.95rem; }
+        .password-box .pw { font-size: 1.4rem; font-weight: 800; color: #1a2a6c; letter-spacing: 2px; font-family: monospace; }
+        .password-box p  { font-size: 0.82rem; color: #7f8c8d; margin-top: 6px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Register New Student</div>
+        </div>
+        <a href="/teacher-dashboard" class="btn-back">← Dashboard</a>
+    </header>
+
+    <div class="card">
+        <div class="card-title">➕ Register New Student</div>
+        <div class="card-sub">A password will be automatically generated from the student's first name.</div>
+
+        {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert alert-success">✅ {{ success }}</div>
+        <div class="password-box">
+            <h4>🔑 Generated Password — Give this to the student:</h4>
+            <div class="pw">{{ gen_password }}</div>
+            <p>The student can change this password after logging in from their dashboard.</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/register-student">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" name="name" id="name" class="form-control"
+                       placeholder="e.g. Emma Johnson" required>
+            </div>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" class="form-control"
+                       placeholder="e.g. emma_j" required>
+                <span class="form-hint">Lowercase letters, numbers, and underscores only. Must be unique.</span>
+            </div>
+            <div class="form-group">
+                <label for="class">Class</label>
+                <input type="text" name="class" id="class" class="form-control"
+                       placeholder="e.g. 10A" required>
+            </div>
+            <button type="submit" class="btn-submit">➕ Register Student</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

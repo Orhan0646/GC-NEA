@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Responses - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.95); border-radius: 10px; margin-bottom: 24px; }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .header-right { display: flex; gap: 12px; align-items: center; }
+        .btn-back { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-back:hover { background: #3a7bd5; }
+        .logout-btn { padding: 8px 18px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+        .section-card { background: white; border-radius: 10px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .section-title { font-size: 1.2rem; font-weight: 700; color: #1a2a6c; margin-bottom: 6px; }
+        .section-sub { font-size: 0.88rem; color: #7f8c8d; margin-bottom: 18px; }
+
+        /* Toggle */
+        .toggle-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .toggle-btn { padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: 0.88rem; font-weight: 600; border: 2px solid #1a2a6c; }
+        .toggle-btn.active { background: #1a2a6c; color: white; }
+        .toggle-btn:not(.active) { background: white; color: #1a2a6c; }
+
+        /* Response cards */
+        .response-card { border: 2px solid #ecf0f1; border-radius: 10px; padding: 20px; margin-bottom: 18px; }
+        .response-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+        .student-info { font-weight: 700; color: #1a2a6c; font-size: 0.95rem; }
+        .student-class { font-size: 0.82rem; color: #7f8c8d; margin-top: 2px; }
+        .q-topic { font-size: 0.75rem; font-weight: 700; color: #3a7bd5; text-transform: uppercase; letter-spacing: 1px; }
+        .mark-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; }
+        .mark-1 { background: #eafaf1; color: #1e8449; }
+        .mark-4 { background: #eaf4fd; color: #1a5276; }
+        .mark-6 { background: #f4ecf7; color: #6c3483; }
+        .mark-8 { background: #fdf2f2; color: #c0392b; }
+
+        .q-text-box { background: #f8f9fa; border-radius: 6px; padding: 12px 16px; margin-bottom: 10px; }
+        .box-label { font-size: 0.78rem; font-weight: 700; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .box-text { font-size: 0.88rem; color: #2c3e50; line-height: 1.6; white-space: pre-wrap; }
+
+        .model-answer-box { background: #eaf4fd; border-left: 4px solid #3a7bd5; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; }
+
+        /* Mark form */
+        .mark-form { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.82rem; font-weight: 600; color: #2c3e50; }
+        .mark-input { padding: 9px 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 0.95rem; width: 100px; }
+        .mark-input:focus { border-color: #3a7bd5; outline: none; }
+        .feedback-input { padding: 9px 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 0.9rem; width: 340px; }
+        .feedback-input:focus { border-color: #3a7bd5; outline: none; }
+        .btn-mark { padding: 9px 24px; background: #2ecc71; color: white; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+        .btn-mark:hover { background: #27ae60; }
+
+        .already-marked { background: #eafaf1; border-radius: 8px; padding: 12px 16px; font-size: 0.88rem; color: #1e8449; font-weight: 600; }
+        .date-sub { font-size: 0.78rem; color: #7f8c8d; margin-top: 4px; }
+
+        .alert { padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; }
+        .alert-success { background: #eafaf1; color: #1e8449; border-left: 4px solid #2ecc71; }
+        .no-responses { text-align: center; padding: 40px; color: #7f8c8d; font-style: italic; }
+
+        .badge-count { display: inline-block; background: #e74c3c; color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; margin-left: 6px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Mark Student Responses</div>
+        </div>
+        <div class="header-right">
+            <a href="/teacher-dashboard" class="btn-back">← Dashboard</a>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    {% if request.args.get('marked') %}
+    <div class="alert alert-success">✅ Response marked successfully.</div>
+    {% endif %}
+
+    <div class="section-card">
+        <div class="section-title">
+            ✏️ Student Exam Responses
+            {% if ungraded_count > 0 %}
+            <span class="badge-count">{{ ungraded_count }} unmarked</span>
+            {% endif %}
+        </div>
+        <div class="section-sub">Review student answers alongside the model answer, then award marks and optional feedback.</div>
+
+        <!-- Toggle unmarked / all -->
+        <div class="toggle-row">
+            <a href="/mark-responses?show=unmarked"
+               class="toggle-btn {% if show == 'unmarked' %}active{% endif %}">
+                Unmarked ({{ ungraded_count }})
+            </a>
+            <a href="/mark-responses?show=all"
+               class="toggle-btn {% if show == 'all' %}active{% endif %}">
+                All Responses
+            </a>
+        </div>
+
+        {% if responses %}
+            {% for r in responses %}
+            <div class="response-card">
+                <div class="response-header">
+                    <div>
+                        <div class="student-info">{{ r.student_name }}</div>
+                        <div class="student-class">{{ r.student_class }}</div>
+                        <div class="date-sub">Submitted: {{ r.date_submitted }}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="q-topic">{{ r.topic }}</div>
+                        <span class="mark-badge mark-{{ r.max_marks }}">{{ r.max_marks }} mark{% if r.max_marks != 1 %}s{% endif %}</span>
+                    </div>
+                </div>
+
+                <!-- Question -->
+                <div class="q-text-box">
+                    <div class="box-label">Question</div>
+                    <div class="box-text">{{ r.question_text }}</div>
+                </div>
+
+                <!-- Student answer -->
+                <div class="q-text-box">
+                    <div class="box-label">Student's Answer</div>
+                    <div class="box-text">{{ r.response_text }}</div>
+                </div>
+
+                <!-- Model answer -->
+                <div class="model-answer-box">
+                    <div class="box-label" style="color:#1a5276;">📋 Model Answer / Mark Scheme</div>
+                    <div class="box-text" style="color:#1a5276;">{{ r.model_answer }}</div>
+                </div>
+
+                {% if r.marked %}
+                <div class="already-marked">
+                    ✅ Marked — {{ r.marks_awarded }} / {{ r.max_marks }} marks
+                    {% if r.feedback %}<br><span style="font-weight:400;color:#2c3e50;">Feedback: {{ r.feedback }}</span>{% endif %}
+                </div>
+                {% else %}
+                <!-- Mark form -->
+                <form method="POST" action="/submit-mark/{{ r.id }}" class="mark-form">
+                    <div class="form-group">
+                        <label>Marks Awarded (max {{ r.max_marks }})</label>
+                        <input type="number" name="marks_awarded" class="mark-input"
+                               min="0" max="{{ r.max_marks }}" required
+                               placeholder="0–{{ r.max_marks }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Feedback (optional)</label>
+                        <input type="text" name="feedback" class="feedback-input"
+                               placeholder="e.g. Good use of terminology, needs more examples...">
+                    </div>
+                    <button type="submit" class="btn-mark">✔ Submit Mark</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+        <p class="no-responses">
+            {% if show == 'unmarked' %}No unmarked responses — all caught up! 🎉
+            {% else %}No responses submitted yet.{% endif %}
+        </p>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

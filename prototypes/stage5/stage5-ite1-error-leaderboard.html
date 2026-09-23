@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; background: rgba(255,255,255,0.95);
+            border-radius: 10px; margin-bottom: 24px;
+        }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .header-right { display: flex; gap: 12px; align-items: center; }
+        .btn-back { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-back:hover { background: #3a7bd5; }
+        .logout-btn { padding: 8px 18px; background: #e74c3c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+        /* ── Title card ── */
+        .title-card {
+            background: white; border-radius: 12px; padding: 28px 32px;
+            text-align: center; margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .title-card h2 { font-size: 2rem; color: #1a2a6c; margin-bottom: 6px; }
+        .title-card p  { color: #7f8c8d; font-size: 0.95rem; }
+
+        /* ── Tabs ── */
+        .tabs { display: flex; gap: 4px; margin-bottom: 0; }
+        .tab-btn {
+            padding: 11px 22px; background: rgba(255,255,255,0.5);
+            border: none; border-radius: 8px 8px 0 0; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; color: #1a2a6c;
+            transition: all 0.2s;
+        }
+        .tab-btn.active { background: white; color: #1a2a6c; }
+        .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.75); }
+
+        /* ── Tab panels ── */
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .leaderboard-card {
+            background: white; border-radius: 0 8px 12px 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;
+        }
+
+        /* ── Table ── */
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #1a2a6c; }
+        thead th { padding: 13px 16px; text-align: left; color: white; font-size: 0.85rem; font-weight: 600; }
+        tbody tr { border-bottom: 1px solid #ecf0f1; transition: background 0.15s; }
+        tbody tr:hover { background: #f0f7ff; }
+        tbody td { padding: 13px 16px; font-size: 0.9rem; color: #2c3e50; vertical-align: middle; }
+
+        /* Own row highlight */
+        .own-row { background: #eaf4fd !important; }
+        .own-row td { font-weight: 600; }
+        .own-badge {
+            display: inline-block; background: #3a7bd5; color: white;
+            font-size: 0.72rem; padding: 2px 8px; border-radius: 10px;
+            margin-left: 8px; font-weight: 700; vertical-align: middle;
+        }
+
+        /* Rank column */
+        .rank-cell { font-size: 1.3rem; text-align: center; width: 60px; }
+        .rank-number { font-weight: 800; color: #1a2a6c; font-size: 1rem; }
+
+        /* Band badges */
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; }
+        .badge-top    { background: #eafaf1; color: #1e8449; }
+        .badge-medium { background: #fef9e7; color: #b7770d; }
+        .badge-needs  { background: #fdf2f2; color: #c0392b; }
+        .badge-none   { background: #f2f3f4; color: #7f8c8d; }
+
+        /* Quiz count */
+        .quiz-count { color: #7f8c8d; font-size: 0.85rem; }
+
+        /* No attempts row */
+        .no-attempts td { color: #bdc3c7; font-style: italic; }
+
+        /* Legend */
+        .legend {
+            padding: 14px 20px; background: #f8f9fa;
+            border-top: 1px solid #ecf0f1;
+            font-size: 0.82rem; color: #7f8c8d;
+            display: flex; gap: 20px; flex-wrap: wrap; align-items: center;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+
+        @media (max-width: 600px) {
+            .tabs { flex-wrap: wrap; }
+            .tab-btn { font-size: 0.8rem; padding: 9px 14px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Class Leaderboard</div>
+        </div>
+        <div class="header-right">
+            {% if role == 'teacher' %}
+                <a href="/teacher-dashboard" class="btn-back">← Dashboard</a>
+            {% else %}
+                <a href="/student-dashboard" class="btn-back">← Dashboard</a>
+            {% endif %}
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <div class="title-card">
+        <h2>🏆 Class Leaderboard</h2>
+        <p>Rankings are based on performance band. Exact scores are not displayed.</p>
+        {% if role == 'student' %}
+        <p style="margin-top:6px;color:#3a7bd5;font-weight:600;">Your row is highlighted in blue.</p>
+        {% endif %}
+    </div>
+
+    <!-- ── Tabs ── -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('overall', this)">🌍 Overall</button>
+        <button class="tab-btn" onclick="switchTab('coastal', this)">🌊 Coastal</button>
+        <button class="tab-btn" onclick="switchTab('river', this)">🏞 River</button>
+        <button class="tab-btn" onclick="switchTab('resource', this)">♻️ Resource</button>
+    </div>
+
+    <!-- ── Overall tab ── -->
+    <div class="tab-panel active" id="tab-overall">
+        <div class="leaderboard-card">
+            {{ render_table(overall, current_user_id) }}
+        </div>
+    </div>
+
+    <!-- ── Per-topic tabs ── -->
+    {% set tab_ids = ['coastal', 'river', 'resource'] %}
+    {% for i, topic in [(0, 'Coastal Landscapes'), (1, 'River Landscapes'), (2, 'Resource Management')] %}
+    <div class="tab-panel" id="tab-{{ tab_ids[i] }}">
+        <div class="leaderboard-card">
+            {{ render_table(topic_data[topic], current_user_id) }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{# ── Reusable table macro ── #}
+{% macro render_table(rows, uid) %}
+<table>
+    <thead>
+        <tr>
+            <th style="text-align:center;">Rank</th>
+            <th>Student</th>
+            <th>Performance Band</th>
+            <th>Quizzes Taken</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set ranked = namespace(pos=0, last_has_score=true) %}
+        {% for row in rows %}
+            {% set is_own = (row.id == uid) %}
+            {% set has_attempts = (row.quiz_count and row.quiz_count > 0) %}
+
+            {# Only increment rank for students with attempts #}
+            {% if has_attempts %}
+                {% set ranked.pos = ranked.pos + 1 %}
+            {% endif %}
+
+            <tr class="{% if is_own %}own-row{% endif %} {% if not has_attempts %}no-attempts{% endif %}">
+                <td class="rank-cell">
+                    {% if has_attempts %}
+                        {% if ranked.pos == 1 %}🥇
+                        {% elif ranked.pos == 2 %}🥈
+                        {% elif ranked.pos == 3 %}🥉
+                        {% else %}<span class="rank-number">{{ ranked.pos }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span style="color:#bdc3c7;">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {{ row.name }}
+                    {% if is_own %}<span class="own-badge">You</span>{% endif %}
+                </td>
+                <td>
+                    {% if has_attempts %}
+                        {% if row.performance_category == 'top' %}
+                            <span class="badge badge-top">🟢 Top (7–9)</span>
+                        {% elif row.performance_category == 'medium' %}
+                            <span class="badge badge-medium">🟡 On Track (4–6)</span>
+                        {% else %}
+                            <span class="badge badge-needs">🔴 Needs Support (U–3)</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge badge-none">No attempts yet</span>
+                    {% endif %}
+                </td>
+                <td class="quiz-count">
+                    {% if has_attempts %}
+                        {{ row.quiz_count }} quiz{% if row.quiz_count != 1 %}zes{% endif %}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class="legend">
+    <span style="font-weight:600;">Key:</span>
+    <span class="legend-item">🥇🥈🥉 Top 3 positions</span>
+    <span class="legend-item"><span class="badge badge-top">Top</span> 70%+ average</span>
+    <span class="legend-item"><span class="badge badge-medium">On Track</span> 40–69%</span>
+    <span class="legend-item"><span class="badge badge-needs">Needs Support</span> Below 40%</span>
+    <span class="legend-item"><span class="badge badge-none">No attempts</span> Not yet started</span>
+</div>
+{% endmacro %}
+
+<script>
+function switchTab(tabId, btn) {
+    // Hide all panels and deactivate all buttons
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    // Show selected panel and activate button
+    document.getElementById('tab-' + tabId).classList.add('active');
+    btn.classList.add('active');
+}
+</script>
+</body>
+</html>

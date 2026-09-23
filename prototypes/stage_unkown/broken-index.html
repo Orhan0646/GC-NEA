@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoChallenge - Educational Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #3a7bd5);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        
+        .home-page {
+            text-align: center;
+            padding: 50px 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .welcome-message {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            color: #2c3e50;
+        }
+        
+        .user-selection {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 50px;
+        }
+        
+        .user-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+        
+        .user-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .user-card.student {
+            border-top: 5px solid #3498db;
+        }
+        
+        .user-card.teacher {
+            border-top: 5px solid #2ecc71;
+        }
+        
+        .user-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .user-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .user-card p {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-teacher {
+            background: #2ecc71;
+        }
+        
+        .btn-teacher:hover {
+            background: #27ae60;
+        }
+        
+        @media (max-width: 768px) {
+            .user-selection {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GeoChallenge</h1>
+            <p class="tagline">Personalized Geography Learning Platform</p>
+        </header>
+        
+        <div class="home-page">
+            <h2 class="welcome-message">Welcome to GeoChallenge</h2>
+            <p>An adaptive learning platform designed to help GCSE Geography students master challenging topics through personalized quizzes and progress tracking.</p>
+            
+            <div class="user-selection">
+                <a href="{{ url_for('student_login') }}" class="user-card student">
+                    <div class="user-icon">🎓</div>
+                    <h3>Student Login</h3>
+                    <p>Access personalized quizzes, track your progress, and improve your Geography skills.</p>
+                    <div class="btn">Enter as Student</div>
+                </a>
+                
+                <a href="{{ url_for('teacher_login') }}" class="user-card teacher">
+                    <div class="user-icon">👩‍🏫</div>
+                    <h3>Teacher Login</h3>
+                    <p>Monitor student progress, customize content, and generate detailed performance reports.</p>
+                    <div class="btn btn-teacher">Enter as Teacher</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

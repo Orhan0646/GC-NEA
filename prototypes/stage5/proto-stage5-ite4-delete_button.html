@@ -1,0 +1,6 @@
+<!-- Delete is a POST form, not a link, to prevent accidental deletion -->
+<form method='POST' action='/delete-question/{{ q.id }}'
+      style='display:inline;'
+      onsubmit="return confirm('Delete this question? This cannot be undone.')">
+    <button type='submit' class='btn-delete'>🗑 Delete</button>
+</form>

@@ -1,0 +1,36 @@
+{% macro render_table(rows, uid) %}
+<table>
+    <tbody>
+        {% set ranked = namespace(pos=0) %}
+        {% for row in rows %}
+            {% set is_own = (row.id == uid) %}
+            {% set has_attempts = (row.quiz_count and row.quiz_count > 0) %}
+
+            {% if has_attempts %}
+                {% set ranked.pos = ranked.pos + 1 %}
+            {% endif %}
+
+            <tr class="{% if is_own %}own-row{% endif %}
+                        {% if not has_attempts %}no-attempts{% endif %}">
+                <td>
+                    {% if has_attempts %}
+                        {% if ranked.pos == 1 %}🥇
+                        {% elif ranked.pos == 2 %}🥈
+                        {% elif ranked.pos == 3 %}🥉
+                        {% else %}<span>{{ ranked.pos }}</span>
+                        {% endif %}
+                    {% else %}<span>—</span>{% endif %}
+                </td>
+                <td>
+                    {{ row.name }}
+                    {% if is_own %}<span class='own-badge'>You</span>{% endif %}
+                </td>
+                ...
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endmacro %}
+
+{{ render_table(overall, current_user_id) }}
+{{ render_table(topic_data['Coastal Landscapes'], current_user_id) }}

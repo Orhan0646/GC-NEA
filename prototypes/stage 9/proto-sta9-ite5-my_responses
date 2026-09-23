@@ -1,0 +1,19 @@
+@app.route('/my-responses')
+def my_responses():
+    if not login_required('student'):
+        return redirect(url_for('student_login'))
+
+    conn   = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT er.id, er.response_text, er.marks_awarded,
+               er.feedback, er.marked, er.date_submitted,
+               eq.question_text, eq.marks as max_marks, eq.topic
+        FROM exam_responses er
+        JOIN exam_questions eq ON eq.id = er.question_id
+        WHERE er.student_id = ?
+        ORDER BY er.date_submitted DESC
+    ''', (session['user_id'],))
+    responses = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return render_template('my-responses.html', responses=responses)

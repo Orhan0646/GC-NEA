@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Question - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
+        .container { max-width: 780px; width: 100%; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.95); border-radius: 10px; margin-bottom: 24px; }
+        header h1 { font-size: 1.6rem; color: #1a2a6c; }
+        .btn-back { padding: 8px 18px; background: #1a2a6c; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-back:hover { background: #3a7bd5; }
+
+        .section-card { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .section-title { font-size: 1.3rem; font-weight: 700; color: #1a2a6c; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid #ecf0f1; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 0.88rem; font-weight: 600; color: #2c3e50; }
+        .form-control { padding: 11px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; }
+        .form-control:focus { border-color: #3a7bd5; outline: none; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; grid-column: 1 / -1; }
+        .option-group { display: flex; align-items: center; gap: 10px; }
+        .option-letter { width: 32px; height: 32px; border-radius: 50%; background: #3a7bd5; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+
+        .btn-row { display: flex; gap: 12px; margin-top: 20px; }
+        .btn-save   { padding: 12px 32px; background: #1a2a6c; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+        .btn-save:hover { background: #3a7bd5; }
+        .btn-cancel { padding: 12px 24px; background: #ecf0f1; color: #2c3e50; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-cancel:hover { background: #d5d8dc; }
+
+        .alert-error { padding: 12px 18px; border-radius: 8px; margin-bottom: 18px; font-weight: 600; background: #fdf2f2; color: #c0392b; border-left: 4px solid #e74c3c; }
+        .id-badge { display: inline-block; background: #eaf4fd; color: #1a2a6c; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; margin-bottom: 18px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>GeoChallenge</h1>
+            <div style="font-size:0.85rem;color:#7f8c8d;">Edit Question</div>
+        </div>
+        <a href="/manage-questions" class="btn-back">← Back to Questions</a>
+    </header>
+
+    <div class="section-card">
+        <div class="section-title">✏️ Edit Question</div>
+
+        <div class="id-badge">Question ID: {{ question.id }}</div>
+
+        {% if error == 'missing_fields' %}
+        <div class="alert-error">⚠️ All fields are required. Please fill in every field.</div>
+        {% endif %}
+
+        <form method="POST" action="/edit-question/{{ question.id }}">
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Topic</label>
+                    <select name="topic" class="form-control" required>
+                        {% for t in topics %}
+                        <option value="{{ t }}" {% if question.topic == t %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Difficulty</label>
+                    <select name="difficulty" class="form-control" required>
+                        {% for d in difficulties %}
+                        <option value="{{ d }}" {% if question.difficulty == d %}selected{% endif %}>{{ d | title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label>Question Text</label>
+                    <input type="text" name="question_text" class="form-control"
+                           value="{{ question.question_text }}" required>
+                </div>
+
+                <div class="options-grid">
+                    {% for letter in ['a', 'b', 'c', 'd'] %}
+                    <div class="option-group">
+                        <div class="option-letter">{{ letter | upper }}</div>
+                        <input type="text" name="option_{{ letter }}" class="form-control"
+                               value="{{ question['option_' + letter] }}" required>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label>Correct Answer</label>
+                    <select name="correct_answer" class="form-control" required>
+                        {% for ans in ['A', 'B', 'C', 'D'] %}
+                        <option value="{{ ans }}" {% if question.correct_answer == ans %}selected{% endif %}>{{ ans }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn-save">💾 Save Changes</button>
+                <a href="/manage-questions" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

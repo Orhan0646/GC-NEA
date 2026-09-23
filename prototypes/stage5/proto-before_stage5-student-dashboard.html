@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - GeoChallenge</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a2a6c, #3a7bd5); color: #333; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.95); border-radius: 10px; margin-bottom: 24px; }
+        header h1 { font-size: 1.8rem; color: #1a2a6c; }
+        .tagline { color: #3498db; font-size: 0.95rem; }
+        .logout-btn { padding: 8px 18px; background: #e74c3c; color: white; border-radius: 5px; text-decoration: none; font-weight: 600; }
+        .logout-btn:hover { background: #c0392b; }
+        .dashboard { background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 30px; margin-bottom: 30px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #ecf0f1; }
+        .page-title { font-size: 1.8rem; color: #2c3e50; }
+        .user-info { color: #7f8c8d; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .dashboard-card { background: #f8f9fa; border-radius: 8px; padding: 20px; }
+        .dashboard-card h3 { margin-bottom: 15px; color: #2c3e50; font-size: 1.3rem; }
+        .topic-selection, .difficulty-selection { display: flex; flex-direction: column; gap: 10px; }
+        .topic-btn, .difficulty-btn { padding: 12px 15px; background: white; border: 1px solid #e1e5e9; border-radius: 5px; text-align: left; cursor: pointer; transition: all 0.3s; font-size: 1rem; }
+        .topic-btn:hover, .difficulty-btn:hover { background: #e3f2fd; transform: translateY(-2px); }
+        .difficulty-btn.needs-improvement { border-left: 4px solid #e74c3c; }
+        .difficulty-btn.medium { border-left: 4px solid #f39c12; }
+        .difficulty-btn.top { border-left: 4px solid #2ecc71; }
+        .progress-section { grid-column: 1 / -1; }
+        .progress-bar { height: 10px; background: #ecf0f1; border-radius: 5px; margin: 6px 0 12px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 5px; }
+        .fill-green { background: #2ecc71; }
+        .fill-amber { background: #f39c12; }
+        .fill-red { background: #e74c3c; }
+        .color-code { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+        .green { background: #2ecc71; }
+        .amber { background: #f39c12; }
+        .red { background: #e74c3c; }
+        .action-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .action-btn { padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; flex: 1; min-width: 120px; text-align: center; font-size: 0.9rem; }
+        .action-btn:hover { background: #2980b9; }
+        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>GeoChallenge</h1>
+                <p class="tagline">Student Dashboard</p>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </header>
+
+        <div class="dashboard">
+            <div class="page-header">
+                <h2 class="page-title">Student Dashboard</h2>
+                <div class="user-info">
+                    Welcome, <strong>{{ name }}</strong>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+
+                <div class="dashboard-card">
+                    <h3>Select Topic</h3>
+                    <div class="topic-selection">
+                        <button class="topic-btn" onclick="setTopic('Coastal Landscapes')">🌊 Coastal Landscapes</button>
+                        <button class="topic-btn" onclick="setTopic('River Landscapes')">🏞 River Landscapes</button>
+                        <button class="topic-btn" onclick="setTopic('Resource Management')">🌍 Resource Management</button>
+                    </div>
+                    <p id="topic-display" style="margin-top:10px;color:#3498db;font-weight:600;display:none;"></p>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>Select Difficulty Level</h3>
+                    <div class="difficulty-selection">
+                        <button class="difficulty-btn needs-improvement" onclick="startQuiz('needs_improvement')">
+                            <span class="color-code red"></span> Needs Improvement (U–3)
+                        </button>
+                        <button class="difficulty-btn medium" onclick="startQuiz('medium')">
+                            <span class="color-code amber"></span> Medium (4–6)
+                        </button>
+                        <button class="difficulty-btn top" onclick="startQuiz('top')">
+                            <span class="color-code green"></span> Top (7–9)
+                        </button>
+                    </div>
+                    <p id="quiz-hint" style="margin-top:10px;color:#e74c3c;font-size:0.9rem;display:none;">⬅ Please select a topic first</p>
+                </div>
+
+                <div class="dashboard-card progress-section">
+                    <h3>Your Progress</h3>
+                    <p>Current Performance Band: <strong>{{ performance_category | title }}</strong></p>
+
+                    {% set topics = [
+                        ("Coastal Landscapes",  "green"),
+                        ("River Landscapes",    "amber"),
+                        ("Resource Management", "red")
+                    ] %}
+
+                    {% for topic, default_colour in topics %}
+                        {% set pct = progress.get(topic, {}).get('percentage', 0) | int %}
+                        {% set cat = progress.get(topic, {}).get('category', default_colour) %}
+                        <p style="margin-top:14px;">
+                            <span class="color-code {{ cat }}"></span>
+                            <strong>{{ topic }}</strong>: {{ pct }}%
+                        </p>
+                        <div class="progress-bar">
+                            <div class="progress-fill fill-{{ cat }}" style="width: {{ pct }}%;"></div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="action-btn">▶ Continue Last Quiz</button>
+                        <button class="action-btn">📋 Review Flashcards</button>
+                        <button class="action-btn">📊 View Reports</button>
+                        <button class="action-btn">✏ Practice Diagrams</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+<script>
+    let selectedTopic = null;
+
+    function setTopic(topic) {
+        selectedTopic = topic;
+        document.querySelectorAll('.topic-btn').forEach(b => b.style.background = 'white');
+        event.target.style.background = '#e3f2fd';
+        document.getElementById('topic-display').textContent = '✅ Topic selected: ' + topic;
+        document.getElementById('topic-display').style.display = 'block';
+        document.getElementById('quiz-hint').style.display = 'none';
+    }
+
+    function startQuiz(difficulty) {
+        if (!selectedTopic) {
+            document.getElementById('quiz-hint').style.display = 'block';
+            return;
+        }
+        window.location.href = `/quiz?topic=${encodeURIComponent(selectedTopic)}&difficulty=${encodeURIComponent(difficulty)}`;
+    }
+</script>
+</body>
+</html>
